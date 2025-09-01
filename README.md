@@ -14,16 +14,6 @@ A modern React + Vite + TypeScript weather dashboard using the OpenWeather API.
 - Error boundaries & retry button
 - Accessible components & keyboard navigation
 
-## Environment Setup
-
-Create a `.env` file in the project root:
-
-```
-VITE_OPENWEATHER_API_KEY=YOUR_KEY_HERE
-```
-
-Never commit a real API key.
-
 ## Scripts
 
 - `npm run dev` – start dev server
@@ -36,6 +26,4 @@ Never commit a real API key.
 
 React 18, TypeScript, Vite, Axios, date-fns, Vitest, Testing Library.
 
-## License
 
-MIT
