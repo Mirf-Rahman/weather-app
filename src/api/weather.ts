@@ -61,8 +61,15 @@ export async function fetchCurrentByCity(
   city: string,
   units: "metric" | "imperial" = "metric"
 ): Promise<CurrentWeather> {
+  // Add cache-busting timestamp
+  const timestamp = Date.now();
   const { data } = await axios.get<CurrentWeather>(`${BASE_URL}/weather`, {
-    params: { q: city, appid: import.meta.env.VITE_OPENWEATHER_API_KEY, units },
+    params: {
+      q: city,
+      appid: import.meta.env.VITE_OPENWEATHER_API_KEY,
+      units,
+      _t: timestamp, // Cache-busting parameter
+    },
   });
   return data;
 }
@@ -71,8 +78,15 @@ export async function fetchForecastByCity(
   city: string,
   units: "metric" | "imperial" = "metric"
 ): Promise<ForecastResponse> {
+  // Add cache-busting timestamp
+  const timestamp = Date.now();
   const { data } = await axios.get<ForecastResponse>(`${BASE_URL}/forecast`, {
-    params: { q: city, appid: import.meta.env.VITE_OPENWEATHER_API_KEY, units },
+    params: {
+      q: city,
+      appid: import.meta.env.VITE_OPENWEATHER_API_KEY,
+      units,
+      _t: timestamp, // Cache-busting parameter
+    },
   });
   return data;
 }
@@ -82,12 +96,15 @@ export async function fetchCurrentByCoords(
   lon: number,
   units: "metric" | "imperial" = "metric"
 ): Promise<CurrentWeather> {
+  // Add cache-busting timestamp
+  const timestamp = Date.now();
   const { data } = await axios.get<CurrentWeather>(`${BASE_URL}/weather`, {
     params: {
       lat,
       lon,
       appid: import.meta.env.VITE_OPENWEATHER_API_KEY,
       units,
+      _t: timestamp, // Cache-busting parameter
     },
   });
   return data;
@@ -98,12 +115,15 @@ export async function fetchForecastByCoords(
   lon: number,
   units: "metric" | "imperial" = "metric"
 ): Promise<ForecastResponse> {
+  // Add cache-busting timestamp
+  const timestamp = Date.now();
   const { data } = await axios.get<ForecastResponse>(`${BASE_URL}/forecast`, {
     params: {
       lat,
       lon,
       appid: import.meta.env.VITE_OPENWEATHER_API_KEY,
       units,
+      _t: timestamp, // Cache-busting parameter
     },
   });
   return data;
