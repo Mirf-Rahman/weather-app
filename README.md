@@ -2,28 +2,88 @@
 
 # Weather App
 
-Modern, fast, accessible weather dashboard built with **React 18 + TypeScript + Vite** using the **OpenWeather** APIs. Features a polished glass UI, dynamic gradients, day & hourly forecast explorer, theming, time‑zone awareness and smart local caching.
+Modern, fast, accessible weather dashboard built with **React 18 + TypeScript + Vite** using the **OpenWeather** APIs. Features a polished UI, dynamic gradients, day & hourly forecast explorer, theming, time‑zone awareness and smart local caching.
 
 </div>
 
+## Overview
+Fast, type‑safe weather client with debounced search, geocoded suggestions, expandable hourly forecast, theme + unit preferences, and resilient caching.
+
+**Typical use case:** Quickly compare local time and weather for multiple cities, drill into near‑term hourly trends, and switch units or themes seamlessly on desktop or mobile.
+
+## Tech Stack
+**Core:** React 18, TypeScript, Vite
+
+**Data / HTTP:** Axios (typed wrappers), OpenWeather REST (current, forecast, geocode), date-fns for time formatting & timezone offset handling (manual offset math; no heavy tz lib)
+
+**State & Logic:** Custom hook (`useWeather`) for orchestration (fetch, cache, refresh, refetch on preference changes)
+
+**Styling:** Hand‑crafted CSS (glassmorphism, gradients, responsive layout) split across `AppLayout.css`, `styles/theme.css`, `styles/enhanced.css`
+
+**Tooling / Quality:** ESLint + @typescript-eslint, Vitest + Testing Library (jsdom), strict TS config
+
+**Build:** Vite 5 (ESM, fast HMR, environment variable prefix `VITE_`)
 ## ✨ Key Features (Implemented)
 
-- 🔍 Debounced city search with geocoding suggestions (OpenWeather Direct Geocoding API) & recent history (localStorage)
-- 📍 "Use My Location" geolocation lookup (navigator.geolocation)
-- 🌡️ Current conditions card with: temp, feels like, humidity, pressure, wind, visibility, sunrise/sunset, live local time vs user time, observation timestamp
-- 📆 5‑Day / 3‑Hour forecast grouped per day with min/max & expandable glass panel showing first 18 hours (6 entries) with key metrics
-- 🌓 Light / Dark theme toggle (persisted) + weather condition theme class hooks
-- 🕒 12h / 24h time format toggle (persisted)
-- ♻️ Manual refresh button + automatic refresh every 10 minutes
-- 📦 Local caching of last successful fetch per city/coordinates (localStorage) + last city persistence
-- 🚫 Graceful error messaging with retry & loading skeleton / spinner
-- 🪟 Gradient background continues beneath expanding forecast panel (glass overlay) for immersive feel
-- ♿ Keyboard & accessibility considerations (role/button, aria labels, focusable forecast cards)
-- 🔁 Unit toggle (Metric °C / Imperial °F) with immediate refetch & UI update
-- 🧭 Time‑zone aware remote vs local time display with periodic clock updates
-- 🔐 Cache‑busting timestamp param added to API calls to avoid stale intermediary caches
-- 🧪 Vitest + Testing Library setup (sample smoke test included)
+### 1. Search & Acquisition 🔍
+- Debounced city search (400ms) with OpenWeather Direct Geocoding suggestions
+- Recent search history & last city persistence (localStorage)
+- One‑click geolocation (HTML5 `navigator.geolocation`)
+- Smart label formatting: City, State (if any), Country
 
+### 2. Current Conditions & Hourly Insight 🌤️
+- Rich current card: temperature, feels like, humidity, pressure, wind, visibility, sunrise, sunset
+- Dual time context: remote local time vs user device time (auto updates every 30s)
+- Observation vs live clock timestamps surfaced for clarity
+- Contextual status text (temperature band + condition + advisory wording)
+
+### 3. Forecast Explorer 📆
+- 5‑day / 3‑hour feed grouped by calendar day with per‑day min/max aggregation
+- Expandable glass panel reveals upcoming hours (first 6 entries) with temp, feels like, humidity, wind
+- Animated panel entry + gradient continuity below overlay
+- Weather summary sentence generated per day (dominant condition + temp range)
+
+### 4. Personalization & Preferences ⚙️
+- Persisted unit system toggle (Metric °C / Imperial °F) with automatic refetch
+- Persisted 12h / 24h time format toggle
+- Persisted light / dark theme toggle (document `data-theme` attribute)
+
+### 5. Interface & Visual System 🎨
+- Glassmorphism layers (blur + translucency) with subtle radial lighting accents
+- Continuous adaptive gradient behind expanding forecast (no harsh solid blocks)
+- Masked scroll fade inside details panel (visual depth + readability)
+- Responsive grid & typography scaling (clamp + auto-fit patterns)
+
+### 6. Performance & Data Handling ⚡
+- LocalStorage namespaced cache: `cache:<type>:<units>:<key>` (separates unit domains)
+- Automatic refresh every 10 minutes (balanced with free tier limits)
+- Manual refresh button with controlled spinner duration (UX feedback)
+- Cache‑busting timestamp query param prevents stale CDN responses
+
+### 7. Resilience & Error Experience 🛡️
+- Graceful failure states with retry action component
+- Skeleton / spinner feedback during network operations
+- Defensive empty state when no city selected
+
+### 8. Accessibility & Semantics ♿
+- Forecast day cards: focusable, `role="button"`, `aria-pressed` for expanded state
+- Alt text on condition icons, accessible labels on interactive toggles
+- High‑contrast mindful color selections and large hit areas
+
+### 9. Testing & Quality 🔍
+- Vitest + Testing Library base setup (jsdom environment)
+- Example API smoke test scaffold (skipped to avoid network by default)
+- Strict TypeScript config enforcing safe patterns
+
+### 10. Extensibility Hooks 🔌
+- Central `useWeather` hook encapsulates fetch, cache, refresh, unit/time/theme side‑effects
+- Clear separation of API layer (`api/weather.ts`) from presentation components
+- Theming variables exposed via CSS custom properties and class hooks
+
+### 11. Notable Implementation Details 🧩
+- Manual timezone offset math (avoids heavier timezone libs)
+- Progressive enhancement styling (works without JS animations; degrades gracefully)
+- Icon requests served straight from OpenWeather static CDN (no bundling overhead)
 ## 🚀 Quick Start
 
 ### 1. Prerequisites
