@@ -4,6 +4,8 @@
 
 Modern, fast, accessible weather dashboard built with **React 18 + TypeScript + Vite** using the **OpenWeather** APIs. Features a polished UI, dynamic gradients, day & hourly forecast explorer, theming, time‑zone awareness and smart local caching.
 
+<p><a href="https://weather-app-mir.vercel.app/" target="_blank"><strong>🌐 Live Demo (Vercel)</strong></a></p>
+
 </div>
 
 ## Overview
