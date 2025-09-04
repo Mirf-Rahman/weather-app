@@ -6,14 +6,22 @@ import { ForecastGrid } from "./components/ForecastGrid";
 import { UnitToggle } from "./components/UnitToggle";
 import { ErrorMessage } from "./components/ErrorMessage";
 import { Loader } from "./components/Loader";
+import { WeatherAnalytics } from "./components/WeatherAnalytics";
+import { LocationManager } from "./components/LocationManager";
+import { SettingsPanel } from "./components/SettingsPanel";
+import { alertsManager } from "./utils/alerts";
+import { weatherDB } from "./utils/database";
 import "./AppLayout.css";
 import "./styles/enhanced.css";
 import "./styles/theme.css";
+import "./styles/components.css";
 
 export const App: React.FC = () => {
   const [units, setUnits] = useState<"metric" | "imperial">("metric");
   const [showHome, setShowHome] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
+  const [showAnalytics, setShowAnalytics] = useState(false);
   const [timeFormat, setTimeFormat] = useState<"12h" | "24h">(() => {
     return localStorage.getItem("timeFormat") === "12h" ? "12h" : "24h";
   });
@@ -30,6 +38,15 @@ export const App: React.FC = () => {
       setShowHome(false);
     }
   }, [search]);
+
+  // Initialize database and check for alerts
+  useEffect(() => {
+    weatherDB.init().catch(console.error);
+    
+    if (current) {
+      alertsManager.checkWeatherConditions(current, current.name);
+    }
+  }, [current]);
 
   // Effect to apply theme
   useEffect(() => {
@@ -222,6 +239,27 @@ export const App: React.FC = () => {
             <div className="controls-group">
               <UnitToggle units={units} onChange={(u) => setUnits(u)} />
 
+              <LocationManager 
+                onLocationSelect={handleSearch}
+                currentLocation={current?.name || ''}
+              />
+
+              <button
+                className="icon-btn"
+                onClick={() => setShowAnalytics(!showAnalytics)}
+                title="Toggle analytics"
+              >
+                📊
+              </button>
+
+              <button
+                className="icon-btn"
+                onClick={() => setShowSettings(true)}
+                title="Settings"
+              >
+                ⚙️
+              </button>
+
               <button
                 className={`icon-btn ${theme === "dark" ? "active" : ""}`}
                 onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
@@ -295,6 +333,14 @@ export const App: React.FC = () => {
               />
             )}
 
+            {showAnalytics && current && forecast && (
+              <WeatherAnalytics
+                currentWeather={current}
+                forecast={forecast}
+                units={units}
+              />
+            )}
+
             {!current && !loading && !error && (
               <div className="empty-state">
                 <div className="empty-icon">🔍</div>
@@ -316,6 +362,17 @@ export const App: React.FC = () => {
           <span className="refresh-icon">⟳</span>
         </button>
       )}
+
+      <SettingsPanel
+        isOpen={showSettings}
+        onClose={() => setShowSettings(false)}
+        units={units}
+        onUnitsChange={setUnits}
+        theme={theme}
+        onThemeChange={setTheme}
+        timeFormat={timeFormat}
+        onTimeFormatChange={setTimeFormat}
+      />
     </div>
   );
 };
