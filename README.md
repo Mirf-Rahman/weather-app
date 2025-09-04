@@ -10,7 +10,7 @@ Glass UI weather dashboard: real‑time current conditions, 5‑day / 3‑hour f
 
 ## Overview
 
-**One‑liner:** Fast, type‑safe weather client with debounced search, geocoded suggestions, expandable hourly forecast, theme + unit preferences, and resilient caching.
+Fast, type‑safe weather client with debounced search, geocoded suggestions, expandable hourly forecast, theme + unit preferences, and resilient caching.
 
 **Typical use case:** Quickly compare local time and weather for multiple cities, drill into near‑term hourly trends, and switch units or themes seamlessly on desktop or mobile.
 
@@ -149,20 +149,6 @@ npm run preview   # Serve the dist/ build locally
 - `npm run lint` – ESLint over `src/`
 - `npm run test` – Run Vitest unit / component tests
 
-## 🗂️ Project Structure
-
-```
-src/
-	api/                OpenWeather API wrappers (current, forecast, geocode)
-	components/         Reusable UI components (cards, forecast grid, inputs)
-	hooks/              Custom React hooks (useWeather state/data manager)
-	styles/             Global + theme + enhancement CSS
-	App.tsx             Root UI composition + theming + routing-like home state
-	AppLayout.css       Primary layout & glass / gradient styling
-	main.tsx            Entry mounting React root
-	__tests__/          Vitest tests
-```
-
 ## 🔌 Data Flow & Caching
 
 `useWeather` orchestrates data fetches and state:
@@ -192,5 +178,3 @@ Rate Limits: Respect OpenWeather free tier limits; avoid aggressive polling (cur
 - Forecast expansion overlays gradient (no flat blue blocks)
 - Masked scroll fade inside detail panel for subtle depth
 - Accessible buttons & semantic roles
-
-
