@@ -42,7 +42,7 @@ export const App: React.FC = () => {
   // Initialize database and check for alerts
   useEffect(() => {
     weatherDB.init().catch(console.error);
-    
+
     if (current) {
       alertsManager.checkWeatherConditions(current, current.name);
     }
@@ -213,7 +213,7 @@ export const App: React.FC = () => {
         <div className="footer-content">
           <p>Powered by OpenWeatherMap API</p>
           <div className="footer-links">
-            <span>Made with ❤️ for weather enthusiasts</span>
+            <span>Made by Mir Faiyazur Rahman</span>
           </div>
         </div>
       </div>
@@ -239,9 +239,9 @@ export const App: React.FC = () => {
             <div className="controls-group">
               <UnitToggle units={units} onChange={(u) => setUnits(u)} />
 
-              <LocationManager 
+              <LocationManager
                 onLocationSelect={handleSearch}
-                currentLocation={current?.name || ''}
+                currentLocation={current?.name || ""}
               />
 
               <button

@@ -7,8 +7,8 @@ export interface WeatherCacheEntry {
   id: string;
   data: any;
   timestamp: number;
-  type: 'current' | 'forecast' | 'location';
-  units: 'metric' | 'imperial';
+  type: "current" | "forecast" | "location";
+  units: "metric" | "imperial";
 }
 
 export interface LocationHistory {
@@ -23,7 +23,7 @@ export interface LocationHistory {
 
 class WeatherDatabase {
   private db: IDBDatabase | null = null;
-  private readonly dbName = 'WeatherAppDB';
+  private readonly dbName = "WeatherAppDB";
   private readonly version = 1;
 
   async init(): Promise<void> {
@@ -42,45 +42,49 @@ class WeatherDatabase {
         const db = (event.target as IDBOpenDBRequest).result;
 
         // Weather cache store
-        if (!db.objectStoreNames.contains('weatherCache')) {
-          const cacheStore = db.createObjectStore('weatherCache', { keyPath: 'id' });
-          cacheStore.createIndex('timestamp', 'timestamp');
-          cacheStore.createIndex('type', 'type');
+        if (!db.objectStoreNames.contains("weatherCache")) {
+          const cacheStore = db.createObjectStore("weatherCache", {
+            keyPath: "id",
+          });
+          cacheStore.createIndex("timestamp", "timestamp");
+          cacheStore.createIndex("type", "type");
         }
 
         // Location history store
-        if (!db.objectStoreNames.contains('locationHistory')) {
-          const historyStore = db.createObjectStore('locationHistory', { keyPath: 'id' });
-          historyStore.createIndex('lastSearched', 'lastSearched');
-          historyStore.createIndex('searchCount', 'searchCount');
+        if (!db.objectStoreNames.contains("locationHistory")) {
+          const historyStore = db.createObjectStore("locationHistory", {
+            keyPath: "id",
+          });
+          historyStore.createIndex("lastSearched", "lastSearched");
+          historyStore.createIndex("searchCount", "searchCount");
         }
 
         // User preferences store
-        if (!db.objectStoreNames.contains('preferences')) {
-          db.createObjectStore('preferences', { keyPath: 'key' });
+        if (!db.objectStoreNames.contains("preferences")) {
+          db.createObjectStore("preferences", { keyPath: "key" });
         }
       };
     });
   }
 
   async saveWeatherData(
-    key: string, 
-    data: any, 
-    type: 'current' | 'forecast', 
-    units: 'metric' | 'imperial'
+    key: string,
+    data: any,
+    type: "current" | "forecast",
+    units: "metric" | "imperial"
   ): Promise<void> {
     await this.init();
-    if (!this.db) throw new Error('Database not initialized');
+    if (!this.db) throw new Error("Database not initialized");
 
-    const transaction = this.db.transaction(['weatherCache'], 'readwrite');
-    const store = transaction.objectStore('weatherCache');
+    const transaction = this.db.transaction(["weatherCache"], "readwrite");
+    const store = transaction.objectStore("weatherCache");
 
     const entry: WeatherCacheEntry = {
       id: `${type}_${units}_${key}`,
       data,
       timestamp: Date.now(),
       type,
-      units
+      units,
     };
 
     await new Promise<void>((resolve, reject) => {
@@ -91,22 +95,22 @@ class WeatherDatabase {
   }
 
   async getWeatherData(
-    key: string, 
-    type: 'current' | 'forecast', 
-    units: 'metric' | 'imperial',
+    key: string,
+    type: "current" | "forecast",
+    units: "metric" | "imperial",
     maxAge: number = 10 * 60 * 1000 // 10 minutes default
   ): Promise<any | null> {
     await this.init();
     if (!this.db) return null;
 
-    const transaction = this.db.transaction(['weatherCache'], 'readonly');
-    const store = transaction.objectStore('weatherCache');
+    const transaction = this.db.transaction(["weatherCache"], "readonly");
+    const store = transaction.objectStore("weatherCache");
 
     return new Promise((resolve, reject) => {
       const request = store.get(`${type}_${units}_${key}`);
       request.onsuccess = () => {
         const result = request.result as WeatherCacheEntry;
-        if (result && (Date.now() - result.timestamp) <= maxAge) {
+        if (result && Date.now() - result.timestamp <= maxAge) {
           resolve(result.data);
         } else {
           resolve(null);
@@ -116,27 +120,31 @@ class WeatherDatabase {
     });
   }
 
-  async saveLocationHistory(location: Omit<LocationHistory, 'id' | 'lastSearched' | 'searchCount'>): Promise<void> {
+  async saveLocationHistory(
+    location: Omit<LocationHistory, "id" | "lastSearched" | "searchCount">
+  ): Promise<void> {
     await this.init();
-    if (!this.db) throw new Error('Database not initialized');
+    if (!this.db) throw new Error("Database not initialized");
 
-    const transaction = this.db.transaction(['locationHistory'], 'readwrite');
-    const store = transaction.objectStore('locationHistory');
+    const transaction = this.db.transaction(["locationHistory"], "readwrite");
+    const store = transaction.objectStore("locationHistory");
 
     const id = `${location.lat}_${location.lon}`;
-    
+
     // Check if location already exists
-    const existing = await new Promise<LocationHistory | null>((resolve, reject) => {
-      const request = store.get(id);
-      request.onsuccess = () => resolve(request.result || null);
-      request.onerror = () => reject(request.error);
-    });
+    const existing = await new Promise<LocationHistory | null>(
+      (resolve, reject) => {
+        const request = store.get(id);
+        request.onsuccess = () => resolve(request.result || null);
+        request.onerror = () => reject(request.error);
+      }
+    );
 
     const entry: LocationHistory = {
       id,
       ...location,
       lastSearched: Date.now(),
-      searchCount: existing ? existing.searchCount + 1 : 1
+      searchCount: existing ? existing.searchCount + 1 : 1,
     };
 
     await new Promise<void>((resolve, reject) => {
@@ -150,12 +158,12 @@ class WeatherDatabase {
     await this.init();
     if (!this.db) return [];
 
-    const transaction = this.db.transaction(['locationHistory'], 'readonly');
-    const store = transaction.objectStore('locationHistory');
-    const index = store.index('lastSearched');
+    const transaction = this.db.transaction(["locationHistory"], "readonly");
+    const store = transaction.objectStore("locationHistory");
+    const index = store.index("lastSearched");
 
     return new Promise((resolve, reject) => {
-      const request = index.openCursor(null, 'prev');
+      const request = index.openCursor(null, "prev");
       const results: LocationHistory[] = [];
 
       request.onsuccess = () => {
@@ -173,10 +181,10 @@ class WeatherDatabase {
 
   async savePreference(key: string, value: any): Promise<void> {
     await this.init();
-    if (!this.db) throw new Error('Database not initialized');
+    if (!this.db) throw new Error("Database not initialized");
 
-    const transaction = this.db.transaction(['preferences'], 'readwrite');
-    const store = transaction.objectStore('preferences');
+    const transaction = this.db.transaction(["preferences"], "readwrite");
+    const store = transaction.objectStore("preferences");
 
     await new Promise<void>((resolve, reject) => {
       const request = store.put({ key, value });
@@ -189,8 +197,8 @@ class WeatherDatabase {
     await this.init();
     if (!this.db) return null;
 
-    const transaction = this.db.transaction(['preferences'], 'readonly');
-    const store = transaction.objectStore('preferences');
+    const transaction = this.db.transaction(["preferences"], "readonly");
+    const store = transaction.objectStore("preferences");
 
     return new Promise((resolve, reject) => {
       const request = store.get(key);
@@ -203,15 +211,15 @@ class WeatherDatabase {
     await this.init();
     if (!this.db) return;
 
-    const transaction = this.db.transaction(['weatherCache'], 'readwrite');
-    const store = transaction.objectStore('weatherCache');
-    const index = store.index('timestamp');
+    const transaction = this.db.transaction(["weatherCache"], "readwrite");
+    const store = transaction.objectStore("weatherCache");
+    const index = store.index("timestamp");
 
     const cutoff = Date.now() - maxAge;
 
     return new Promise((resolve, reject) => {
       const request = index.openCursor(IDBKeyRange.upperBound(cutoff));
-      
+
       request.onsuccess = () => {
         const cursor = request.result;
         if (cursor) {

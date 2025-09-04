@@ -1,5 +1,5 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { alertsManager, AlertRule } from '../utils/alerts';
+import { describe, it, expect, beforeEach, vi } from "vitest";
+import { alertsManager, AlertRule } from "../utils/alerts";
 
 // Mock localStorage
 const localStorageMock = {
@@ -8,58 +8,58 @@ const localStorageMock = {
   removeItem: vi.fn(),
   clear: vi.fn(),
 };
-Object.defineProperty(window, 'localStorage', { value: localStorageMock });
+Object.defineProperty(window, "localStorage", { value: localStorageMock });
 
 // Mock Notification API
-Object.defineProperty(window, 'Notification', {
+Object.defineProperty(window, "Notification", {
   value: vi.fn().mockImplementation(() => ({})),
   writable: true,
 });
 
-describe('AlertsManager', () => {
+describe("AlertsManager", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     localStorageMock.getItem.mockReturnValue(null);
   });
 
-  describe('addRule', () => {
-    it('should add a new alert rule', () => {
-      const rule: Omit<AlertRule, 'id'> = {
-        type: 'temperature',
-        condition: 'above',
+  describe("addRule", () => {
+    it("should add a new alert rule", () => {
+      const rule: Omit<AlertRule, "id"> = {
+        type: "temperature",
+        condition: "above",
         threshold: 30,
         enabled: true,
-        locations: ['London'],
-        notifyTypes: ['browser']
+        locations: ["London"],
+        notifyTypes: ["browser"],
       };
 
       const ruleId = alertsManager.addRule(rule);
-      
+
       expect(ruleId).toBeDefined();
       expect(ruleId).toMatch(/^rule_/);
-      
+
       const rules = alertsManager.getRules();
       expect(rules).toHaveLength(1);
       expect(rules[0]).toMatchObject(rule);
     });
 
-    it('should generate unique IDs for multiple rules', () => {
-      const rule1: Omit<AlertRule, 'id'> = {
-        type: 'temperature',
-        condition: 'above',
+    it("should generate unique IDs for multiple rules", () => {
+      const rule1: Omit<AlertRule, "id"> = {
+        type: "temperature",
+        condition: "above",
         threshold: 30,
         enabled: true,
-        locations: ['London'],
-        notifyTypes: ['browser']
+        locations: ["London"],
+        notifyTypes: ["browser"],
       };
 
-      const rule2: Omit<AlertRule, 'id'> = {
-        type: 'humidity',
-        condition: 'below',
+      const rule2: Omit<AlertRule, "id"> = {
+        type: "humidity",
+        condition: "below",
         threshold: 40,
         enabled: true,
-        locations: ['Paris'],
-        notifyTypes: ['browser']
+        locations: ["Paris"],
+        notifyTypes: ["browser"],
       };
 
       const id1 = alertsManager.addRule(rule1);
@@ -70,15 +70,15 @@ describe('AlertsManager', () => {
     });
   });
 
-  describe('removeRule', () => {
-    it('should remove an existing rule', () => {
-      const rule: Omit<AlertRule, 'id'> = {
-        type: 'temperature',
-        condition: 'above',
+  describe("removeRule", () => {
+    it("should remove an existing rule", () => {
+      const rule: Omit<AlertRule, "id"> = {
+        type: "temperature",
+        condition: "above",
         threshold: 30,
         enabled: true,
-        locations: ['London'],
-        notifyTypes: ['browser']
+        locations: ["London"],
+        notifyTypes: ["browser"],
       };
 
       const ruleId = alertsManager.addRule(rule);
@@ -89,196 +89,204 @@ describe('AlertsManager', () => {
       expect(alertsManager.getRules()).toHaveLength(0);
     });
 
-    it('should return false for non-existent rule', () => {
-      const removed = alertsManager.removeRule('non-existent-id');
+    it("should return false for non-existent rule", () => {
+      const removed = alertsManager.removeRule("non-existent-id");
       expect(removed).toBe(false);
     });
   });
 
-  describe('updateRule', () => {
-    it('should update an existing rule', () => {
-      const rule: Omit<AlertRule, 'id'> = {
-        type: 'temperature',
-        condition: 'above',
+  describe("updateRule", () => {
+    it("should update an existing rule", () => {
+      const rule: Omit<AlertRule, "id"> = {
+        type: "temperature",
+        condition: "above",
         threshold: 30,
         enabled: true,
-        locations: ['London'],
-        notifyTypes: ['browser']
+        locations: ["London"],
+        notifyTypes: ["browser"],
       };
 
       const ruleId = alertsManager.addRule(rule);
-      
-      const updated = alertsManager.updateRule(ruleId, { 
-        threshold: 35, 
-        enabled: false 
+
+      const updated = alertsManager.updateRule(ruleId, {
+        threshold: 35,
+        enabled: false,
       });
-      
+
       expect(updated).toBe(true);
-      
+
       const rules = alertsManager.getRules();
-      const updatedRule = rules.find(r => r.id === ruleId);
-      
+      const updatedRule = rules.find((r) => r.id === ruleId);
+
       expect(updatedRule?.threshold).toBe(35);
       expect(updatedRule?.enabled).toBe(false);
-      expect(updatedRule?.type).toBe('temperature'); // Unchanged
+      expect(updatedRule?.type).toBe("temperature"); // Unchanged
     });
 
-    it('should return false for non-existent rule', () => {
-      const updated = alertsManager.updateRule('non-existent-id', { threshold: 35 });
+    it("should return false for non-existent rule", () => {
+      const updated = alertsManager.updateRule("non-existent-id", {
+        threshold: 35,
+      });
       expect(updated).toBe(false);
     });
   });
 
-  describe('checkWeatherConditions', () => {
+  describe("checkWeatherConditions", () => {
     beforeEach(() => {
       // Clear any existing rules
-      alertsManager.getRules().forEach(rule => {
+      alertsManager.getRules().forEach((rule) => {
         alertsManager.removeRule(rule.id);
       });
     });
 
-    it('should trigger alert when temperature condition is met', () => {
+    it("should trigger alert when temperature condition is met", () => {
       alertsManager.addRule({
-        type: 'temperature',
-        condition: 'above',
+        type: "temperature",
+        condition: "above",
         threshold: 25,
         enabled: true,
-        locations: ['*'],
-        notifyTypes: ['browser']
+        locations: ["*"],
+        notifyTypes: ["browser"],
       });
 
       const weather = {
         main: { temp: 30, humidity: 60 },
         wind: { speed: 5 },
-        rain: { '1h': 0 }
+        rain: { "1h": 0 },
       };
 
-      const alerts = alertsManager.checkWeatherConditions(weather, 'London');
-      
+      const alerts = alertsManager.checkWeatherConditions(weather, "London");
+
       expect(alerts).toHaveLength(1);
-      expect(alerts[0].type).toBe('temperature');
+      expect(alerts[0].type).toBe("temperature");
       expect(alerts[0].severity).toBeDefined();
       expect(alerts[0].isActive).toBe(true);
     });
 
-    it('should not trigger alert when condition is not met', () => {
+    it("should not trigger alert when condition is not met", () => {
       alertsManager.addRule({
-        type: 'temperature',
-        condition: 'above',
+        type: "temperature",
+        condition: "above",
         threshold: 35,
         enabled: true,
-        locations: ['*'],
-        notifyTypes: ['browser']
+        locations: ["*"],
+        notifyTypes: ["browser"],
       });
 
       const weather = {
         main: { temp: 30, humidity: 60 },
         wind: { speed: 5 },
-        rain: { '1h': 0 }
+        rain: { "1h": 0 },
       };
 
-      const alerts = alertsManager.checkWeatherConditions(weather, 'London');
-      
+      const alerts = alertsManager.checkWeatherConditions(weather, "London");
+
       expect(alerts).toHaveLength(0);
     });
 
-    it('should not trigger alert when rule is disabled', () => {
+    it("should not trigger alert when rule is disabled", () => {
       alertsManager.addRule({
-        type: 'temperature',
-        condition: 'above',
+        type: "temperature",
+        condition: "above",
         threshold: 25,
         enabled: false,
-        locations: ['*'],
-        notifyTypes: ['browser']
+        locations: ["*"],
+        notifyTypes: ["browser"],
       });
 
       const weather = {
         main: { temp: 30, humidity: 60 },
         wind: { speed: 5 },
-        rain: { '1h': 0 }
+        rain: { "1h": 0 },
       };
 
-      const alerts = alertsManager.checkWeatherConditions(weather, 'London');
-      
+      const alerts = alertsManager.checkWeatherConditions(weather, "London");
+
       expect(alerts).toHaveLength(0);
     });
 
-    it('should trigger multiple alerts for different conditions', () => {
+    it("should trigger multiple alerts for different conditions", () => {
       alertsManager.addRule({
-        type: 'temperature',
-        condition: 'above',
+        type: "temperature",
+        condition: "above",
         threshold: 25,
         enabled: true,
-        locations: ['*'],
-        notifyTypes: ['browser']
+        locations: ["*"],
+        notifyTypes: ["browser"],
       });
 
       alertsManager.addRule({
-        type: 'humidity',
-        condition: 'above',
+        type: "humidity",
+        condition: "above",
         threshold: 70,
         enabled: true,
-        locations: ['*'],
-        notifyTypes: ['browser']
+        locations: ["*"],
+        notifyTypes: ["browser"],
       });
 
       const weather = {
         main: { temp: 30, humidity: 80 },
         wind: { speed: 5 },
-        rain: { '1h': 0 }
+        rain: { "1h": 0 },
       };
 
-      const alerts = alertsManager.checkWeatherConditions(weather, 'London');
-      
+      const alerts = alertsManager.checkWeatherConditions(weather, "London");
+
       expect(alerts).toHaveLength(2);
-      expect(alerts.map(a => a.type)).toContain('temperature');
-      expect(alerts.map(a => a.type)).toContain('humidity');
+      expect(alerts.map((a) => a.type)).toContain("temperature");
+      expect(alerts.map((a) => a.type)).toContain("humidity");
     });
 
-    it('should respect location-specific rules', () => {
+    it("should respect location-specific rules", () => {
       alertsManager.addRule({
-        type: 'temperature',
-        condition: 'above',
+        type: "temperature",
+        condition: "above",
         threshold: 25,
         enabled: true,
-        locations: ['London'],
-        notifyTypes: ['browser']
+        locations: ["London"],
+        notifyTypes: ["browser"],
       });
 
       const weather = {
         main: { temp: 30, humidity: 60 },
         wind: { speed: 5 },
-        rain: { '1h': 0 }
+        rain: { "1h": 0 },
       };
 
       // Should trigger for London
-      const londonAlerts = alertsManager.checkWeatherConditions(weather, 'London');
+      const londonAlerts = alertsManager.checkWeatherConditions(
+        weather,
+        "London"
+      );
       expect(londonAlerts).toHaveLength(1);
 
       // Should not trigger for Paris
-      const parisAlerts = alertsManager.checkWeatherConditions(weather, 'Paris');
+      const parisAlerts = alertsManager.checkWeatherConditions(
+        weather,
+        "Paris"
+      );
       expect(parisAlerts).toHaveLength(0);
     });
   });
 
-  describe('acknowledgeAlert', () => {
-    it('should acknowledge an alert', () => {
+  describe("acknowledgeAlert", () => {
+    it("should acknowledge an alert", () => {
       alertsManager.addRule({
-        type: 'temperature',
-        condition: 'above',
+        type: "temperature",
+        condition: "above",
         threshold: 25,
         enabled: true,
-        locations: ['*'],
-        notifyTypes: ['browser']
+        locations: ["*"],
+        notifyTypes: ["browser"],
       });
 
       const weather = {
         main: { temp: 30, humidity: 60 },
         wind: { speed: 5 },
-        rain: { '1h': 0 }
+        rain: { "1h": 0 },
       };
 
-      const alerts = alertsManager.checkWeatherConditions(weather, 'London');
+      const alerts = alertsManager.checkWeatherConditions(weather, "London");
       const alertId = alerts[0].id;
 
       const acknowledged = alertsManager.acknowledgeAlert(alertId);
@@ -288,14 +296,14 @@ describe('AlertsManager', () => {
       expect(activeAlerts).toHaveLength(0);
     });
 
-    it('should return false for non-existent alert', () => {
-      const acknowledged = alertsManager.acknowledgeAlert('non-existent-id');
+    it("should return false for non-existent alert", () => {
+      const acknowledged = alertsManager.acknowledgeAlert("non-existent-id");
       expect(acknowledged).toBe(false);
     });
   });
 
-  describe('setSoundEnabled', () => {
-    it('should enable/disable sound notifications', () => {
+  describe("setSoundEnabled", () => {
+    it("should enable/disable sound notifications", () => {
       expect(alertsManager.isSoundEnabled()).toBe(false);
 
       alertsManager.setSoundEnabled(true);

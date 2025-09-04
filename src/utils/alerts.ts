@@ -5,8 +5,8 @@
 
 export interface WeatherAlert {
   id: string;
-  type: 'temperature' | 'rain' | 'wind' | 'humidity' | 'air_quality';
-  severity: 'low' | 'moderate' | 'high' | 'extreme';
+  type: "temperature" | "rain" | "wind" | "humidity" | "air_quality";
+  severity: "low" | "moderate" | "high" | "extreme";
   title: string;
   description: string;
   location: string;
@@ -18,19 +18,19 @@ export interface WeatherAlert {
 
 export interface AlertRule {
   id: string;
-  type: 'temperature' | 'rain' | 'wind' | 'humidity';
-  condition: 'above' | 'below' | 'equals';
+  type: "temperature" | "rain" | "wind" | "humidity";
+  condition: "above" | "below" | "equals";
   threshold: number;
   enabled: boolean;
   locations: string[];
-  notifyTypes: ('browser' | 'sound')[];
+  notifyTypes: ("browser" | "sound")[];
 }
 
 class AlertsManager {
   private alerts: WeatherAlert[] = [];
   private rules: AlertRule[] = [];
   private soundEnabled = false;
-  private notificationPermission: NotificationPermission = 'default';
+  private notificationPermission: NotificationPermission = "default";
 
   constructor() {
     this.loadPersistedData();
@@ -38,16 +38,16 @@ class AlertsManager {
   }
 
   async requestNotificationPermission(): Promise<void> {
-    if ('Notification' in window) {
+    if ("Notification" in window) {
       this.notificationPermission = await Notification.requestPermission();
     }
   }
 
   private loadPersistedData(): void {
     try {
-      const storedAlerts = localStorage.getItem('weatherAlerts');
-      const storedRules = localStorage.getItem('alertRules');
-      const soundSetting = localStorage.getItem('alertSoundEnabled');
+      const storedAlerts = localStorage.getItem("weatherAlerts");
+      const storedRules = localStorage.getItem("alertRules");
+      const soundSetting = localStorage.getItem("alertSoundEnabled");
 
       if (storedAlerts) {
         this.alerts = JSON.parse(storedAlerts);
@@ -55,26 +55,26 @@ class AlertsManager {
       if (storedRules) {
         this.rules = JSON.parse(storedRules);
       }
-      this.soundEnabled = soundSetting === 'true';
+      this.soundEnabled = soundSetting === "true";
     } catch (error) {
-      console.error('Failed to load persisted alert data:', error);
+      console.error("Failed to load persisted alert data:", error);
     }
   }
 
   private saveToStorage(): void {
     try {
-      localStorage.setItem('weatherAlerts', JSON.stringify(this.alerts));
-      localStorage.setItem('alertRules', JSON.stringify(this.rules));
-      localStorage.setItem('alertSoundEnabled', String(this.soundEnabled));
+      localStorage.setItem("weatherAlerts", JSON.stringify(this.alerts));
+      localStorage.setItem("alertRules", JSON.stringify(this.rules));
+      localStorage.setItem("alertSoundEnabled", String(this.soundEnabled));
     } catch (error) {
-      console.error('Failed to save alert data:', error);
+      console.error("Failed to save alert data:", error);
     }
   }
 
-  addRule(rule: Omit<AlertRule, 'id'>): string {
+  addRule(rule: Omit<AlertRule, "id">): string {
     const newRule: AlertRule = {
       ...rule,
-      id: `rule_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+      id: `rule_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
     };
 
     this.rules.push(newRule);
@@ -83,7 +83,7 @@ class AlertsManager {
   }
 
   removeRule(id: string): boolean {
-    const index = this.rules.findIndex(rule => rule.id === id);
+    const index = this.rules.findIndex((rule) => rule.id === id);
     if (index !== -1) {
       this.rules.splice(index, 1);
       this.saveToStorage();
@@ -93,7 +93,7 @@ class AlertsManager {
   }
 
   updateRule(id: string, updates: Partial<AlertRule>): boolean {
-    const rule = this.rules.find(r => r.id === id);
+    const rule = this.rules.find((r) => r.id === id);
     if (rule) {
       Object.assign(rule, updates);
       this.saveToStorage();
@@ -102,12 +102,19 @@ class AlertsManager {
     return false;
   }
 
-  checkWeatherConditions(currentWeather: any, location: string): WeatherAlert[] {
+  checkWeatherConditions(
+    currentWeather: any,
+    location: string
+  ): WeatherAlert[] {
     const newAlerts: WeatherAlert[] = [];
 
     this.rules
-      .filter(rule => rule.enabled && (rule.locations.includes(location) || rule.locations.includes('*')))
-      .forEach(rule => {
+      .filter(
+        (rule) =>
+          rule.enabled &&
+          (rule.locations.includes(location) || rule.locations.includes("*"))
+      )
+      .forEach((rule) => {
         const alert = this.evaluateRule(rule, currentWeather, location);
         if (alert) {
           newAlerts.push(alert);
@@ -115,9 +122,10 @@ class AlertsManager {
       });
 
     // Add new alerts and update existing ones
-    newAlerts.forEach(newAlert => {
+    newAlerts.forEach((newAlert) => {
       const existingIndex = this.alerts.findIndex(
-        alert => alert.type === newAlert.type && alert.location === newAlert.location
+        (alert) =>
+          alert.type === newAlert.type && alert.location === newAlert.location
       );
 
       if (existingIndex !== -1) {
@@ -129,139 +137,183 @@ class AlertsManager {
     });
 
     // Mark alerts as inactive if conditions no longer meet
-    this.alerts.forEach(alert => {
-      if (!newAlerts.some(na => na.type === alert.type && na.location === alert.location)) {
+    this.alerts.forEach((alert) => {
+      if (
+        !newAlerts.some(
+          (na) => na.type === alert.type && na.location === alert.location
+        )
+      ) {
         alert.isActive = false;
         alert.endTime = Date.now();
       }
     });
 
     this.saveToStorage();
-    return this.alerts.filter(alert => alert.isActive);
+    return this.alerts.filter((alert) => alert.isActive);
   }
 
-  private evaluateRule(rule: AlertRule, weather: any, location: string): WeatherAlert | null {
+  private evaluateRule(
+    rule: AlertRule,
+    weather: any,
+    location: string
+  ): WeatherAlert | null {
     let currentValue: number;
     let unit: string;
 
     switch (rule.type) {
-      case 'temperature':
+      case "temperature":
         currentValue = weather.main.temp;
-        unit = '°';
+        unit = "°";
         break;
-      case 'humidity':
+      case "humidity":
         currentValue = weather.main.humidity;
-        unit = '%';
+        unit = "%";
         break;
-      case 'wind':
+      case "wind":
         currentValue = weather.wind.speed;
-        unit = ' m/s';
+        unit = " m/s";
         break;
-      case 'rain':
-        currentValue = weather.rain?.['1h'] || 0;
-        unit = 'mm';
+      case "rain":
+        currentValue = weather.rain?.["1h"] || 0;
+        unit = "mm";
         break;
       default:
         return null;
     }
 
-    const conditionMet = this.checkCondition(rule.condition, currentValue, rule.threshold);
+    const conditionMet = this.checkCondition(
+      rule.condition,
+      currentValue,
+      rule.threshold
+    );
 
     if (conditionMet) {
-      const severity = this.calculateSeverity(rule.type, currentValue, rule.threshold);
-      
+      const severity = this.calculateSeverity(
+        rule.type,
+        currentValue,
+        rule.threshold
+      );
+
       return {
         id: `alert_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
         type: rule.type,
         severity,
         title: this.generateAlertTitle(rule.type, severity),
-        description: this.generateAlertDescription(rule.type, currentValue, unit, rule.condition, rule.threshold),
+        description: this.generateAlertDescription(
+          rule.type,
+          currentValue,
+          unit,
+          rule.condition,
+          rule.threshold
+        ),
         location,
         startTime: Date.now(),
         isActive: true,
-        acknowledged: false
+        acknowledged: false,
       };
     }
 
     return null;
   }
 
-  private checkCondition(condition: 'above' | 'below' | 'equals', current: number, threshold: number): boolean {
+  private checkCondition(
+    condition: "above" | "below" | "equals",
+    current: number,
+    threshold: number
+  ): boolean {
     switch (condition) {
-      case 'above':
+      case "above":
         return current > threshold;
-      case 'below':
+      case "below":
         return current < threshold;
-      case 'equals':
+      case "equals":
         return Math.abs(current - threshold) < 0.1;
       default:
         return false;
     }
   }
 
-  private calculateSeverity(type: string, current: number, threshold: number): 'low' | 'moderate' | 'high' | 'extreme' {
+  private calculateSeverity(
+    type: string,
+    current: number,
+    threshold: number
+  ): "low" | "moderate" | "high" | "extreme" {
     const difference = Math.abs(current - threshold);
-    
+
     // Define severity thresholds based on alert type
     const severityThresholds = {
       temperature: { moderate: 5, high: 10, extreme: 15 },
       humidity: { moderate: 20, high: 40, extreme: 60 },
       wind: { moderate: 5, high: 15, extreme: 25 },
-      rain: { moderate: 2, high: 10, extreme: 25 }
+      rain: { moderate: 2, high: 10, extreme: 25 },
     };
 
-    const thresholds = severityThresholds[type as keyof typeof severityThresholds] || severityThresholds.temperature;
+    const thresholds =
+      severityThresholds[type as keyof typeof severityThresholds] ||
+      severityThresholds.temperature;
 
-    if (difference >= thresholds.extreme) return 'extreme';
-    if (difference >= thresholds.high) return 'high';
-    if (difference >= thresholds.moderate) return 'moderate';
-    return 'low';
+    if (difference >= thresholds.extreme) return "extreme";
+    if (difference >= thresholds.high) return "high";
+    if (difference >= thresholds.moderate) return "moderate";
+    return "low";
   }
 
   private generateAlertTitle(type: string, severity: string): string {
     const titles = {
       temperature: {
-        low: 'Temperature Alert',
-        moderate: 'Temperature Warning',
-        high: 'Extreme Temperature',
-        extreme: 'Dangerous Temperature'
+        low: "Temperature Alert",
+        moderate: "Temperature Warning",
+        high: "Extreme Temperature",
+        extreme: "Dangerous Temperature",
       },
       humidity: {
-        low: 'Humidity Alert',
-        moderate: 'Humidity Warning',
-        high: 'High Humidity',
-        extreme: 'Extreme Humidity'
+        low: "Humidity Alert",
+        moderate: "Humidity Warning",
+        high: "High Humidity",
+        extreme: "Extreme Humidity",
       },
       wind: {
-        low: 'Wind Alert',
-        moderate: 'Strong Winds',
-        high: 'High Wind Warning',
-        extreme: 'Dangerous Winds'
+        low: "Wind Alert",
+        moderate: "Strong Winds",
+        high: "High Wind Warning",
+        extreme: "Dangerous Winds",
       },
       rain: {
-        low: 'Rain Alert',
-        moderate: 'Heavy Rain',
-        high: 'Severe Rain Warning',
-        extreme: 'Extreme Rainfall'
-      }
+        low: "Rain Alert",
+        moderate: "Heavy Rain",
+        high: "Severe Rain Warning",
+        extreme: "Extreme Rainfall",
+      },
     };
 
-    return titles[type as keyof typeof titles]?.[severity as keyof typeof titles.temperature] || 'Weather Alert';
+    return (
+      titles[type as keyof typeof titles]?.[
+        severity as keyof typeof titles.temperature
+      ] || "Weather Alert"
+    );
   }
 
-  private generateAlertDescription(type: string, current: number, unit: string, condition: string, threshold: number): string {
-    return `Current ${type} is ${current.toFixed(1)}${unit}, which is ${condition} the threshold of ${threshold}${unit}`;
+  private generateAlertDescription(
+    type: string,
+    current: number,
+    unit: string,
+    condition: string,
+    threshold: number
+  ): string {
+    return `Current ${type} is ${current.toFixed(
+      1
+    )}${unit}, which is ${condition} the threshold of ${threshold}${unit}`;
   }
 
   private triggerNotification(alert: WeatherAlert): void {
     // Browser notification
-    if (this.notificationPermission === 'granted') {
+    if (this.notificationPermission === "granted") {
       new Notification(alert.title, {
         body: alert.description,
-        icon: '/weather-icon.png',
-        badge: '/weather-badge.png',
+        icon: "/weather-icon.png",
+        badge: "/weather-badge.png",
         tag: alert.id,
-        requireInteraction: alert.severity === 'extreme'
+        requireInteraction: alert.severity === "extreme",
       });
     }
 
@@ -273,28 +325,28 @@ class AlertsManager {
 
   private playNotificationSound(severity: string): void {
     const audio = new Audio();
-    
+
     // Different sounds for different severities
     switch (severity) {
-      case 'extreme':
-        audio.src = '/sounds/alert-extreme.mp3';
+      case "extreme":
+        audio.src = "/sounds/alert-extreme.mp3";
         break;
-      case 'high':
-        audio.src = '/sounds/alert-high.mp3';
+      case "high":
+        audio.src = "/sounds/alert-high.mp3";
         break;
       default:
-        audio.src = '/sounds/alert-normal.mp3';
+        audio.src = "/sounds/alert-normal.mp3";
         break;
     }
 
     audio.volume = 0.5;
-    audio.play().catch(error => {
-      console.warn('Could not play notification sound:', error);
+    audio.play().catch((error) => {
+      console.warn("Could not play notification sound:", error);
     });
   }
 
   acknowledgeAlert(id: string): boolean {
-    const alert = this.alerts.find(a => a.id === id);
+    const alert = this.alerts.find((a) => a.id === id);
     if (alert) {
       alert.acknowledged = true;
       this.saveToStorage();
@@ -304,7 +356,7 @@ class AlertsManager {
   }
 
   getActiveAlerts(): WeatherAlert[] {
-    return this.alerts.filter(alert => alert.isActive && !alert.acknowledged);
+    return this.alerts.filter((alert) => alert.isActive && !alert.acknowledged);
   }
 
   getAllAlerts(): WeatherAlert[] {
@@ -326,7 +378,7 @@ class AlertsManager {
 
   clearOldAlerts(maxAge: number = 7 * 24 * 60 * 60 * 1000): void {
     const cutoff = Date.now() - maxAge;
-    this.alerts = this.alerts.filter(alert => alert.startTime > cutoff);
+    this.alerts = this.alerts.filter((alert) => alert.startTime > cutoff);
     this.saveToStorage();
   }
 }

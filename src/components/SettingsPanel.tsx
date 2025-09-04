@@ -1,16 +1,16 @@
-import React, { useState, useEffect } from 'react';
-import { alertsManager, AlertRule } from '../utils/alerts';
-import { weatherDB } from '../utils/database';
+import React, { useState, useEffect } from "react";
+import { alertsManager, AlertRule } from "../utils/alerts";
+import { weatherDB } from "../utils/database";
 
 interface SettingsProps {
   isOpen: boolean;
   onClose: () => void;
-  units: 'metric' | 'imperial';
-  onUnitsChange: (units: 'metric' | 'imperial') => void;
-  theme: 'light' | 'dark';
-  onThemeChange: (theme: 'light' | 'dark') => void;
-  timeFormat: '12h' | '24h';
-  onTimeFormatChange: (format: '12h' | '24h') => void;
+  units: "metric" | "imperial";
+  onUnitsChange: (units: "metric" | "imperial") => void;
+  theme: "light" | "dark";
+  onThemeChange: (theme: "light" | "dark") => void;
+  timeFormat: "12h" | "24h";
+  onTimeFormatChange: (format: "12h" | "24h") => void;
 }
 
 export const SettingsPanel: React.FC<SettingsProps> = ({
@@ -21,17 +21,19 @@ export const SettingsPanel: React.FC<SettingsProps> = ({
   theme,
   onThemeChange,
   timeFormat,
-  onTimeFormatChange
+  onTimeFormatChange,
 }) => {
-  const [activeTab, setActiveTab] = useState<'general' | 'alerts' | 'data' | 'about'>('general');
+  const [activeTab, setActiveTab] = useState<
+    "general" | "alerts" | "data" | "about"
+  >("general");
   const [alertRules, setAlertRules] = useState<AlertRule[]>([]);
   const [newRule, setNewRule] = useState<Partial<AlertRule>>({
-    type: 'temperature',
-    condition: 'above',
+    type: "temperature",
+    condition: "above",
     threshold: 30,
     enabled: true,
-    locations: ['*'],
-    notifyTypes: ['browser']
+    locations: ["*"],
+    notifyTypes: ["browser"],
   });
   const [autoRefresh, setAutoRefresh] = useState(true);
   const [refreshInterval, setRefreshInterval] = useState(10);
@@ -52,13 +54,13 @@ export const SettingsPanel: React.FC<SettingsProps> = ({
         storedRefreshInterval,
         storedDataRetention,
         storedAnimations,
-        rules
+        rules,
       ] = await Promise.all([
-        weatherDB.getPreference('autoRefresh'),
-        weatherDB.getPreference('refreshInterval'),
-        weatherDB.getPreference('dataRetention'),
-        weatherDB.getPreference('animationsEnabled'),
-        Promise.resolve(alertsManager.getRules())
+        weatherDB.getPreference("autoRefresh"),
+        weatherDB.getPreference("refreshInterval"),
+        weatherDB.getPreference("dataRetention"),
+        weatherDB.getPreference("animationsEnabled"),
+        Promise.resolve(alertsManager.getRules()),
       ]);
 
       setAutoRefresh(storedAutoRefresh ?? true);
@@ -68,7 +70,7 @@ export const SettingsPanel: React.FC<SettingsProps> = ({
       setAlertRules(rules);
       setSoundEnabled(alertsManager.isSoundEnabled());
     } catch (error) {
-      console.error('Failed to load settings:', error);
+      console.error("Failed to load settings:", error);
     }
   };
 
@@ -82,23 +84,23 @@ export const SettingsPanel: React.FC<SettingsProps> = ({
 
   const handleAutoRefreshChange = (enabled: boolean) => {
     setAutoRefresh(enabled);
-    savePreference('autoRefresh', enabled);
+    savePreference("autoRefresh", enabled);
   };
 
   const handleRefreshIntervalChange = (interval: number) => {
     setRefreshInterval(interval);
-    savePreference('refreshInterval', interval);
+    savePreference("refreshInterval", interval);
   };
 
   const handleDataRetentionChange = (days: number) => {
     setDataRetention(days);
-    savePreference('dataRetention', days);
+    savePreference("dataRetention", days);
   };
 
   const handleAnimationsChange = (enabled: boolean) => {
     setAnimationsEnabled(enabled);
-    savePreference('animationsEnabled', enabled);
-    document.body.classList.toggle('no-animations', !enabled);
+    savePreference("animationsEnabled", enabled);
+    document.body.classList.toggle("no-animations", !enabled);
   };
 
   const handleSoundChange = (enabled: boolean) => {
@@ -108,21 +110,21 @@ export const SettingsPanel: React.FC<SettingsProps> = ({
 
   const addAlertRule = () => {
     if (newRule.type && newRule.condition && newRule.threshold !== undefined) {
-      const ruleId = alertsManager.addRule(newRule as Omit<AlertRule, 'id'>);
+      const ruleId = alertsManager.addRule(newRule as Omit<AlertRule, "id">);
       setAlertRules(alertsManager.getRules());
       setNewRule({
-        type: 'temperature',
-        condition: 'above',
+        type: "temperature",
+        condition: "above",
         threshold: 30,
         enabled: true,
-        locations: ['*'],
-        notifyTypes: ['browser']
+        locations: ["*"],
+        notifyTypes: ["browser"],
       });
     }
   };
 
   const toggleAlertRule = (id: string) => {
-    const rule = alertRules.find(r => r.id === id);
+    const rule = alertRules.find((r) => r.id === id);
     if (rule) {
       alertsManager.updateRule(id, { enabled: !rule.enabled });
       setAlertRules(alertsManager.getRules());
@@ -135,14 +137,18 @@ export const SettingsPanel: React.FC<SettingsProps> = ({
   };
 
   const clearAllData = async () => {
-    if (confirm('Are you sure you want to clear all stored data? This cannot be undone.')) {
+    if (
+      confirm(
+        "Are you sure you want to clear all stored data? This cannot be undone."
+      )
+    ) {
       try {
         localStorage.clear();
         await weatherDB.clearOldCache(0); // Clear all
-        alert('All data has been cleared.');
+        alert("All data has been cleared.");
         onClose();
       } catch (error) {
-        alert('Failed to clear data.');
+        alert("Failed to clear data.");
       }
     }
   };
@@ -158,14 +164,18 @@ export const SettingsPanel: React.FC<SettingsProps> = ({
       animationsEnabled,
       soundEnabled,
       alertRules,
-      exportDate: new Date().toISOString()
+      exportDate: new Date().toISOString(),
     };
 
-    const blob = new Blob([JSON.stringify(settings, null, 2)], { type: 'application/json' });
+    const blob = new Blob([JSON.stringify(settings, null, 2)], {
+      type: "application/json",
+    });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
+    const a = document.createElement("a");
     a.href = url;
-    a.download = `weather-app-settings-${new Date().toISOString().split('T')[0]}.json`;
+    a.download = `weather-app-settings-${
+      new Date().toISOString().split("T")[0]
+    }.json`;
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -178,21 +188,26 @@ export const SettingsPanel: React.FC<SettingsProps> = ({
     reader.onload = async (e) => {
       try {
         const settings = JSON.parse(e.target?.result as string);
-        
+
         // Apply imported settings
         if (settings.units) onUnitsChange(settings.units);
         if (settings.theme) onThemeChange(settings.theme);
         if (settings.timeFormat) onTimeFormatChange(settings.timeFormat);
-        if (settings.autoRefresh !== undefined) handleAutoRefreshChange(settings.autoRefresh);
-        if (settings.refreshInterval) handleRefreshIntervalChange(settings.refreshInterval);
-        if (settings.dataRetention) handleDataRetentionChange(settings.dataRetention);
-        if (settings.animationsEnabled !== undefined) handleAnimationsChange(settings.animationsEnabled);
-        if (settings.soundEnabled !== undefined) handleSoundChange(settings.soundEnabled);
-        
-        alert('Settings imported successfully!');
+        if (settings.autoRefresh !== undefined)
+          handleAutoRefreshChange(settings.autoRefresh);
+        if (settings.refreshInterval)
+          handleRefreshIntervalChange(settings.refreshInterval);
+        if (settings.dataRetention)
+          handleDataRetentionChange(settings.dataRetention);
+        if (settings.animationsEnabled !== undefined)
+          handleAnimationsChange(settings.animationsEnabled);
+        if (settings.soundEnabled !== undefined)
+          handleSoundChange(settings.soundEnabled);
+
+        alert("Settings imported successfully!");
         loadSettings();
       } catch (error) {
-        alert('Failed to import settings. Please check the file format.');
+        alert("Failed to import settings. Please check the file format.");
       }
     };
     reader.readAsText(file);
@@ -202,49 +217,51 @@ export const SettingsPanel: React.FC<SettingsProps> = ({
 
   return (
     <div className="settings-overlay" onClick={onClose}>
-      <div className="settings-panel" onClick={e => e.stopPropagation()}>
+      <div className="settings-panel" onClick={(e) => e.stopPropagation()}>
         <div className="settings-header">
           <h2>⚙️ Settings</h2>
-          <button className="close-btn" onClick={onClose}>✕</button>
+          <button className="close-btn" onClick={onClose}>
+            ✕
+          </button>
         </div>
 
         <div className="settings-tabs">
-          {(['general', 'alerts', 'data', 'about'] as const).map(tab => (
+          {(["general", "alerts", "data", "about"] as const).map((tab) => (
             <button
               key={tab}
-              className={`tab-btn ${activeTab === tab ? 'active' : ''}`}
+              className={`tab-btn ${activeTab === tab ? "active" : ""}`}
               onClick={() => setActiveTab(tab)}
             >
-              {tab === 'general' && '🔧 General'}
-              {tab === 'alerts' && '🚨 Alerts'}
-              {tab === 'data' && '💾 Data'}
-              {tab === 'about' && 'ℹ️ About'}
+              {tab === "general" && "🔧 General"}
+              {tab === "alerts" && "🚨 Alerts"}
+              {tab === "data" && "💾 Data"}
+              {tab === "about" && "ℹ️ About"}
             </button>
           ))}
         </div>
 
         <div className="settings-content">
-          {activeTab === 'general' && (
+          {activeTab === "general" && (
             <div className="general-settings">
               <div className="setting-group">
                 <h3>Display</h3>
-                
+
                 <div className="setting-item">
                   <label>Units</label>
                   <div className="radio-group">
                     <label>
                       <input
                         type="radio"
-                        checked={units === 'metric'}
-                        onChange={() => onUnitsChange('metric')}
+                        checked={units === "metric"}
+                        onChange={() => onUnitsChange("metric")}
                       />
                       Metric (°C, m/s)
                     </label>
                     <label>
                       <input
                         type="radio"
-                        checked={units === 'imperial'}
-                        onChange={() => onUnitsChange('imperial')}
+                        checked={units === "imperial"}
+                        onChange={() => onUnitsChange("imperial")}
                       />
                       Imperial (°F, mph)
                     </label>
@@ -257,16 +274,16 @@ export const SettingsPanel: React.FC<SettingsProps> = ({
                     <label>
                       <input
                         type="radio"
-                        checked={theme === 'light'}
-                        onChange={() => onThemeChange('light')}
+                        checked={theme === "light"}
+                        onChange={() => onThemeChange("light")}
                       />
                       Light
                     </label>
                     <label>
                       <input
                         type="radio"
-                        checked={theme === 'dark'}
-                        onChange={() => onThemeChange('dark')}
+                        checked={theme === "dark"}
+                        onChange={() => onThemeChange("dark")}
                       />
                       Dark
                     </label>
@@ -279,16 +296,16 @@ export const SettingsPanel: React.FC<SettingsProps> = ({
                     <label>
                       <input
                         type="radio"
-                        checked={timeFormat === '12h'}
-                        onChange={() => onTimeFormatChange('12h')}
+                        checked={timeFormat === "12h"}
+                        onChange={() => onTimeFormatChange("12h")}
                       />
                       12 Hour
                     </label>
                     <label>
                       <input
                         type="radio"
-                        checked={timeFormat === '24h'}
-                        onChange={() => onTimeFormatChange('24h')}
+                        checked={timeFormat === "24h"}
+                        onChange={() => onTimeFormatChange("24h")}
                       />
                       24 Hour
                     </label>
@@ -309,13 +326,15 @@ export const SettingsPanel: React.FC<SettingsProps> = ({
 
               <div className="setting-group">
                 <h3>Data Refresh</h3>
-                
+
                 <div className="setting-item">
                   <label>
                     <input
                       type="checkbox"
                       checked={autoRefresh}
-                      onChange={(e) => handleAutoRefreshChange(e.target.checked)}
+                      onChange={(e) =>
+                        handleAutoRefreshChange(e.target.checked)
+                      }
                     />
                     Auto-refresh weather data
                   </label>
@@ -326,7 +345,9 @@ export const SettingsPanel: React.FC<SettingsProps> = ({
                     <label>Refresh Interval</label>
                     <select
                       value={refreshInterval}
-                      onChange={(e) => handleRefreshIntervalChange(Number(e.target.value))}
+                      onChange={(e) =>
+                        handleRefreshIntervalChange(Number(e.target.value))
+                      }
                     >
                       <option value={5}>5 minutes</option>
                       <option value={10}>10 minutes</option>
@@ -340,11 +361,11 @@ export const SettingsPanel: React.FC<SettingsProps> = ({
             </div>
           )}
 
-          {activeTab === 'alerts' && (
+          {activeTab === "alerts" && (
             <div className="alerts-settings">
               <div className="setting-group">
                 <h3>Notification Settings</h3>
-                
+
                 <div className="setting-item">
                   <label>
                     <input
@@ -359,12 +380,17 @@ export const SettingsPanel: React.FC<SettingsProps> = ({
 
               <div className="setting-group">
                 <h3>Alert Rules</h3>
-                
+
                 <div className="new-rule-form">
                   <div className="form-row">
                     <select
                       value={newRule.type}
-                      onChange={(e) => setNewRule(prev => ({ ...prev, type: e.target.value as any }))}
+                      onChange={(e) =>
+                        setNewRule((prev) => ({
+                          ...prev,
+                          type: e.target.value as any,
+                        }))
+                      }
                     >
                       <option value="temperature">Temperature</option>
                       <option value="humidity">Humidity</option>
@@ -374,7 +400,12 @@ export const SettingsPanel: React.FC<SettingsProps> = ({
 
                     <select
                       value={newRule.condition}
-                      onChange={(e) => setNewRule(prev => ({ ...prev, condition: e.target.value as any }))}
+                      onChange={(e) =>
+                        setNewRule((prev) => ({
+                          ...prev,
+                          condition: e.target.value as any,
+                        }))
+                      }
                     >
                       <option value="above">Above</option>
                       <option value="below">Below</option>
@@ -384,8 +415,13 @@ export const SettingsPanel: React.FC<SettingsProps> = ({
                     <input
                       type="number"
                       placeholder="Threshold"
-                      value={newRule.threshold || ''}
-                      onChange={(e) => setNewRule(prev => ({ ...prev, threshold: Number(e.target.value) }))}
+                      value={newRule.threshold || ""}
+                      onChange={(e) =>
+                        setNewRule((prev) => ({
+                          ...prev,
+                          threshold: Number(e.target.value),
+                        }))
+                      }
                     />
 
                     <button onClick={addAlertRule}>Add Rule</button>
@@ -393,22 +429,26 @@ export const SettingsPanel: React.FC<SettingsProps> = ({
                 </div>
 
                 <div className="rules-list">
-                  {alertRules.map(rule => (
+                  {alertRules.map((rule) => (
                     <div key={rule.id} className="rule-item">
                       <div className="rule-info">
                         <span className="rule-description">
                           {rule.type} {rule.condition} {rule.threshold}
                         </span>
                         <span className="rule-locations">
-                          {rule.locations.includes('*') ? 'All locations' : rule.locations.join(', ')}
+                          {rule.locations.includes("*")
+                            ? "All locations"
+                            : rule.locations.join(", ")}
                         </span>
                       </div>
                       <div className="rule-actions">
                         <button
-                          className={`toggle-btn ${rule.enabled ? 'enabled' : 'disabled'}`}
+                          className={`toggle-btn ${
+                            rule.enabled ? "enabled" : "disabled"
+                          }`}
                           onClick={() => toggleAlertRule(rule.id)}
                         >
-                          {rule.enabled ? '🔔' : '🔕'}
+                          {rule.enabled ? "🔔" : "🔕"}
                         </button>
                         <button
                           className="delete-btn"
@@ -424,16 +464,18 @@ export const SettingsPanel: React.FC<SettingsProps> = ({
             </div>
           )}
 
-          {activeTab === 'data' && (
+          {activeTab === "data" && (
             <div className="data-settings">
               <div className="setting-group">
                 <h3>Data Management</h3>
-                
+
                 <div className="setting-item">
                   <label>Data Retention</label>
                   <select
                     value={dataRetention}
-                    onChange={(e) => handleDataRetentionChange(Number(e.target.value))}
+                    onChange={(e) =>
+                      handleDataRetentionChange(Number(e.target.value))
+                    }
                   >
                     <option value={1}>1 day</option>
                     <option value={3}>3 days</option>
@@ -447,18 +489,18 @@ export const SettingsPanel: React.FC<SettingsProps> = ({
 
               <div className="setting-group">
                 <h3>Import/Export</h3>
-                
+
                 <div className="data-actions">
                   <button className="export-btn" onClick={exportSettings}>
                     📤 Export Settings
                   </button>
-                  
+
                   <label className="import-btn">
                     📥 Import Settings
                     <input
                       type="file"
                       accept=".json"
-                      style={{ display: 'none' }}
+                      style={{ display: "none" }}
                       onChange={importSettings}
                     />
                   </label>
@@ -470,17 +512,23 @@ export const SettingsPanel: React.FC<SettingsProps> = ({
                 <button className="danger-btn" onClick={clearAllData}>
                   🗑️ Clear All Data
                 </button>
-                <small>This will delete all cached weather data, location history, and settings</small>
+                <small>
+                  This will delete all cached weather data, location history,
+                  and settings
+                </small>
               </div>
             </div>
           )}
 
-          {activeTab === 'about' && (
+          {activeTab === "about" && (
             <div className="about-settings">
               <div className="app-info">
                 <h3>Weather App</h3>
                 <p>Version 1.0.0</p>
-                <p>A modern, feature-rich weather application built with React and TypeScript.</p>
+                <p>
+                  A modern, feature-rich weather application built with React
+                  and TypeScript.
+                </p>
               </div>
 
               <div className="features-list">
