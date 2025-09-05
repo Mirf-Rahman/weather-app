@@ -170,11 +170,3 @@ npm run preview   # Serve the dist/ build locally
 Parameters: `appid`, `q` or `lat/lon`, `units` (`metric` or `imperial`), and cache-busting `_t` timestamp.
 
 Rate Limits: Respect OpenWeather free tier limits; avoid aggressive polling (current implementation: manual + 10‑minute auto interval).
-
-## 🎨 UI / UX Notes
-
-- Dynamic gradient background (fixed palettes for dark vs light modes)
-- Glassmorphism panels with layered radial highlights
-- Forecast expansion overlays gradient (no flat blue blocks)
-- Masked scroll fade inside detail panel for subtle depth
-- Accessible buttons & semantic roles
