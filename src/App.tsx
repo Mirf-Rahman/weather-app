@@ -3,6 +3,9 @@ import { useWeather } from "./hooks/useWeather";
 import { SearchBar } from "./components/SearchBar";
 import { CurrentWeatherCard } from "./components/CurrentWeatherCard";
 import { ForecastGrid } from "./components/ForecastGrid";
+import WeatherCharts from "./components/WeatherCharts";
+import AirQuality from "./components/AirQuality";
+import WeatherInsights from "./components/WeatherInsights";
 import { UnitToggle } from "./components/UnitToggle";
 import { ErrorMessage } from "./components/ErrorMessage";
 import { Loader } from "./components/Loader";
@@ -15,6 +18,7 @@ import "./AppLayout.css";
 import "./styles/enhanced.css";
 import "./styles/theme.css";
 import "./styles/components.css";
+import "./styles/charts.css";
 
 export const App: React.FC = () => {
   const [units, setUnits] = useState<"metric" | "imperial">("metric");
@@ -22,13 +26,14 @@ export const App: React.FC = () => {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showAnalytics, setShowAnalytics] = useState(false);
+  const [showCharts, setShowCharts] = useState(false);
   const [timeFormat, setTimeFormat] = useState<"12h" | "24h">(() => {
     return localStorage.getItem("timeFormat") === "12h" ? "12h" : "24h";
   });
   const [theme, setTheme] = useState<"light" | "dark">(() => {
     return localStorage.getItem("theme") === "light" ? "light" : "dark";
   });
-  const { current, forecast, loading, error, search, searchByCoords } =
+  const { current, forecast, airQuality, loading, error, search, searchByCoords } =
     useWeather(units);
 
   useEffect(() => {
@@ -253,6 +258,14 @@ export const App: React.FC = () => {
               </button>
 
               <button
+                className={`icon-btn ${showCharts ? "active" : ""}`}
+                onClick={() => setShowCharts(!showCharts)}
+                title="Toggle charts"
+              >
+                📈
+              </button>
+
+              <button
                 className="icon-btn"
                 onClick={() => setShowSettings(true)}
                 title="Settings"
@@ -330,6 +343,31 @@ export const App: React.FC = () => {
                 data={forecast}
                 units={units}
                 timeFormat={timeFormat}
+              />
+            )}
+
+            {showCharts && forecast && !loading && (
+              <WeatherCharts
+                forecast={forecast.list}
+                units={units}
+                theme={theme}
+              />
+            )}
+
+            {airQuality && !loading && (
+              <AirQuality
+                data={airQuality}
+                theme={theme}
+              />
+            )}
+
+            {current && forecast && !loading && (
+              <WeatherInsights
+                current={current}
+                forecast={forecast}
+                airQuality={airQuality}
+                units={units}
+                theme={theme}
               />
             )}
 
