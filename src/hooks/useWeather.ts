@@ -2,15 +2,18 @@ import { useCallback, useState, useEffect } from "react";
 import {
   CurrentWeather,
   ForecastResponse,
+  AirQualityData,
   fetchCurrentByCity,
   fetchForecastByCity,
   fetchCurrentByCoords,
   fetchForecastByCoords,
+  fetchAirQuality,
 } from "../api/weather";
 
 export function useWeather(units: "metric" | "imperial") {
   const [current, setCurrent] = useState<CurrentWeather | null>(null);
   const [forecast, setForecast] = useState<ForecastResponse | null>(null);
+  const [airQuality, setAirQuality] = useState<AirQualityData | null>(null);
   const [city, setCity] = useState<string>("");
   const [lastCoords, setLastCoords] = useState<{
     lat: number;
@@ -20,7 +23,7 @@ export function useWeather(units: "metric" | "imperial") {
   const [error, setError] = useState<string | null>(null);
   const [lastUpdated, setLastUpdated] = useState<number>(0);
 
-  function cacheKey(type: "current" | "forecast", key: string) {
+  function cacheKey(type: "current" | "forecast" | "airquality", key: string) {
     return `cache:${type}:${units}:${key.toLowerCase()}`;
   }
 
@@ -35,12 +38,24 @@ export function useWeather(units: "metric" | "imperial") {
           fetchForecastByCity(q, units),
         ]);
 
+        // Fetch air quality data using coordinates
+        let aq: AirQualityData | null = null;
+        try {
+          aq = await fetchAirQuality(c.coord.lat, c.coord.lon);
+        } catch (e) {
+          console.warn('Air quality data unavailable:', e);
+        }
+
         // Update cache with the fresh data
         localStorage.setItem(cacheKey("current", q), JSON.stringify(c));
         localStorage.setItem(cacheKey("forecast", q), JSON.stringify(f));
+        if (aq) {
+          localStorage.setItem(cacheKey("airquality", q), JSON.stringify(aq));
+        }
 
         setCurrent(c);
         setForecast(f);
+        setAirQuality(aq);
         setCity(q);
         setLastCoords(null); // Clear coords when searching by city
         localStorage.setItem("lastCity", q);
@@ -65,13 +80,26 @@ export function useWeather(units: "metric" | "imperial") {
           fetchCurrentByCoords(lat, lon, units),
           fetchForecastByCoords(lat, lon, units),
         ]);
+
+        // Fetch air quality data
+        let aq: AirQualityData | null = null;
+        try {
+          aq = await fetchAirQuality(lat, lon);
+        } catch (e) {
+          console.warn('Air quality data unavailable:', e);
+        }
+
         setCurrent(c);
         setForecast(f);
+        setAirQuality(aq);
         setCity(c.name);
         setLastCoords({ lat, lon }); // Store coords for unit changes
         localStorage.setItem("lastCity", c.name);
         localStorage.setItem(cacheKey("current", key), JSON.stringify(c));
         localStorage.setItem(cacheKey("forecast", key), JSON.stringify(f));
+        if (aq) {
+          localStorage.setItem(cacheKey("airquality", key), JSON.stringify(aq));
+        }
         setLastUpdated(Date.now());
       } catch (e: any) {
         setError(e?.response?.data?.message || "Failed to fetch weather");
@@ -111,6 +139,7 @@ export function useWeather(units: "metric" | "imperial") {
   return {
     current,
     forecast,
+    airQuality,
     city,
     loading,
     error,
