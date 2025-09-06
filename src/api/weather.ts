@@ -2,11 +2,13 @@ import axios from "axios";
 
 const BASE_URL = "https://api.openweathermap.org/data/2.5";
 const GEO_URL = "https://api.openweathermap.org/geo/1.0";
+const AIR_QUALITY_URL = "https://api.openweathermap.org/data/2.5/air_pollution";
 
 export interface CurrentWeather {
   name: string;
   dt: number;
   timezone: number;
+  coord: { lat: number; lon: number };
   weather: { id: number; main: string; description: string; icon: string }[];
   main: {
     temp: number;
@@ -35,6 +37,8 @@ export interface ForecastListItem {
   wind: { speed: number; deg: number };
   visibility: number;
   dt_txt: string;
+  rain?: { "3h": number };
+  snow?: { "3h": number };
 }
 
 export interface ForecastResponse {
@@ -55,6 +59,26 @@ export interface GeocodeResult {
   lon: number;
   country: string;
   state?: string;
+}
+
+export interface AirQualityData {
+  coord: { lon: number; lat: number };
+  list: {
+    dt: number;
+    main: {
+      aqi: number; // Air Quality Index: 1=Good, 2=Fair, 3=Moderate, 4=Poor, 5=Very Poor
+    };
+    components: {
+      co: number;    // Carbon monoxide
+      no: number;    // Nitric oxide
+      no2: number;   // Nitrogen dioxide
+      o3: number;    // Ozone
+      so2: number;   // Sulphur dioxide
+      pm2_5: number; // Fine particles matter
+      pm10: number;  // Coarse particulate matter
+      nh3: number;   // Ammonia
+    };
+  }[];
 }
 
 export async function fetchCurrentByCity(
@@ -136,6 +160,22 @@ export async function geocodeCity(
   if (!q.trim()) return [];
   const { data } = await axios.get<GeocodeResult[]>(`${GEO_URL}/direct`, {
     params: { q, appid: import.meta.env.VITE_OPENWEATHER_API_KEY, limit },
+  });
+  return data;
+}
+
+export async function fetchAirQuality(
+  lat: number,
+  lon: number
+): Promise<AirQualityData> {
+  const timestamp = Date.now();
+  const { data } = await axios.get<AirQualityData>(`${AIR_QUALITY_URL}`, {
+    params: {
+      lat,
+      lon,
+      appid: import.meta.env.VITE_OPENWEATHER_API_KEY,
+      _t: timestamp,
+    },
   });
   return data;
 }
