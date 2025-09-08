@@ -69,14 +69,14 @@ export interface AirQualityData {
       aqi: number; // Air Quality Index: 1=Good, 2=Fair, 3=Moderate, 4=Poor, 5=Very Poor
     };
     components: {
-      co: number;    // Carbon monoxide
-      no: number;    // Nitric oxide
-      no2: number;   // Nitrogen dioxide
-      o3: number;    // Ozone
-      so2: number;   // Sulphur dioxide
+      co: number; // Carbon monoxide
+      no: number; // Nitric oxide
+      no2: number; // Nitrogen dioxide
+      o3: number; // Ozone
+      so2: number; // Sulphur dioxide
       pm2_5: number; // Fine particles matter
-      pm10: number;  // Coarse particulate matter
-      nh3: number;   // Ammonia
+      pm10: number; // Coarse particulate matter
+      nh3: number; // Ammonia
     };
   }[];
 }

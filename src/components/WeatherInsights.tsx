@@ -1,34 +1,38 @@
-import React from 'react';
-import { CurrentWeather, ForecastResponse, AirQualityData } from '../api/weather';
-import { format } from 'date-fns';
+import React from "react";
+import {
+  CurrentWeather,
+  ForecastResponse,
+  AirQualityData,
+} from "../api/weather";
+import { format } from "date-fns";
 
 interface WeatherInsightsProps {
   current: CurrentWeather;
   forecast: ForecastResponse;
   airQuality?: AirQualityData | null;
-  units: 'metric' | 'imperial';
-  theme: 'light' | 'dark';
+  units: "metric" | "imperial";
+  theme: "light" | "dark";
 }
 
-const WeatherInsights: React.FC<WeatherInsightsProps> = ({ 
-  current, 
-  forecast, 
-  airQuality, 
-  units, 
-  theme 
+const WeatherInsights: React.FC<WeatherInsightsProps> = ({
+  current,
+  forecast,
+  airQuality,
+  units,
+  theme,
 }) => {
   // Calculate temperature trends
-  const temps = forecast.list.slice(0, 8).map(item => item.main.temp);
-  const tempTrend = temps[temps.length - 1] > temps[0] ? 'rising' : 'falling';
+  const temps = forecast.list.slice(0, 8).map((item) => item.main.temp);
+  const tempTrend = temps[temps.length - 1] > temps[0] ? "rising" : "falling";
   const tempChange = Math.abs(temps[temps.length - 1] - temps[0]);
 
   // Find max/min for today
-  const today = format(new Date(), 'yyyy-MM-dd');
-  const todayForecast = forecast.list.filter(item => 
+  const today = format(new Date(), "yyyy-MM-dd");
+  const todayForecast = forecast.list.filter((item) =>
     item.dt_txt.startsWith(today)
   );
-  const todayMax = Math.max(...todayForecast.map(item => item.main.temp_max));
-  const todayMin = Math.min(...todayForecast.map(item => item.main.temp_min));
+  const todayMax = Math.max(...todayForecast.map((item) => item.main.temp_max));
+  const todayMin = Math.min(...todayForecast.map((item) => item.main.temp_min));
 
   // Calculate comfort level
   const getComfortLevel = () => {
@@ -36,34 +40,34 @@ const WeatherInsights: React.FC<WeatherInsightsProps> = ({
     const humidity = current.main.humidity;
     const wind = current.wind.speed;
 
-    if (units === 'metric') {
+    if (units === "metric") {
       // Metric comfort ranges
       if (temp >= 20 && temp <= 26 && humidity <= 60 && wind <= 15) {
-        return { level: 'Excellent', color: '#10b981', icon: '😊' };
+        return { level: "Excellent", color: "#10b981", icon: "😊" };
       } else if (temp >= 16 && temp <= 30 && humidity <= 70) {
-        return { level: 'Good', color: '#84cc16', icon: '🙂' };
+        return { level: "Good", color: "#84cc16", icon: "🙂" };
       } else if (temp >= 10 && temp <= 35) {
-        return { level: 'Fair', color: '#f59e0b', icon: '😐' };
+        return { level: "Fair", color: "#f59e0b", icon: "😐" };
       } else {
-        return { level: 'Poor', color: '#ef4444', icon: '😰' };
+        return { level: "Poor", color: "#ef4444", icon: "😰" };
       }
     } else {
       // Imperial comfort ranges
       if (temp >= 68 && temp <= 78 && humidity <= 60 && wind <= 34) {
-        return { level: 'Excellent', color: '#10b981', icon: '😊' };
+        return { level: "Excellent", color: "#10b981", icon: "😊" };
       } else if (temp >= 60 && temp <= 86 && humidity <= 70) {
-        return { level: 'Good', color: '#84cc16', icon: '🙂' };
+        return { level: "Good", color: "#84cc16", icon: "🙂" };
       } else if (temp >= 50 && temp <= 95) {
-        return { level: 'Fair', color: '#f59e0b', icon: '😐' };
+        return { level: "Fair", color: "#f59e0b", icon: "😐" };
       } else {
-        return { level: 'Poor', color: '#ef4444', icon: '😰' };
+        return { level: "Poor", color: "#ef4444", icon: "😰" };
       }
     }
   };
 
   const comfort = getComfortLevel();
-  const tempUnit = units === 'metric' ? '°C' : '°F';
-  const speedUnit = units === 'metric' ? 'km/h' : 'mph';
+  const tempUnit = units === "metric" ? "°C" : "°F";
+  const speedUnit = units === "metric" ? "km/h" : "mph";
 
   // Generate activity recommendations
   const getActivityRecommendations = () => {
@@ -74,42 +78,60 @@ const WeatherInsights: React.FC<WeatherInsightsProps> = ({
     const aqi = airQuality?.list[0]?.main.aqi;
 
     // Temperature-based recommendations
-    if (units === 'metric') {
-      if (temp >= 15 && temp <= 25 && !condition.includes('rain')) {
-        recommendations.push({ text: 'Perfect for outdoor activities', icon: '🚶‍♂️' });
+    if (units === "metric") {
+      if (temp >= 15 && temp <= 25 && !condition.includes("rain")) {
+        recommendations.push({
+          text: "Perfect for outdoor activities",
+          icon: "🚶‍♂️",
+        });
       }
       if (temp >= 20 && temp <= 30 && wind < 10) {
-        recommendations.push({ text: 'Great weather for picnics', icon: '🧺' });
+        recommendations.push({ text: "Great weather for picnics", icon: "🧺" });
       }
       if (temp < 5) {
-        recommendations.push({ text: 'Bundle up if going outside', icon: '🧥' });
+        recommendations.push({
+          text: "Bundle up if going outside",
+          icon: "🧥",
+        });
       }
     } else {
-      if (temp >= 59 && temp <= 77 && !condition.includes('rain')) {
-        recommendations.push({ text: 'Perfect for outdoor activities', icon: '🚶‍♂️' });
+      if (temp >= 59 && temp <= 77 && !condition.includes("rain")) {
+        recommendations.push({
+          text: "Perfect for outdoor activities",
+          icon: "🚶‍♂️",
+        });
       }
       if (temp >= 68 && temp <= 86 && wind < 22) {
-        recommendations.push({ text: 'Great weather for picnics', icon: '🧺' });
+        recommendations.push({ text: "Great weather for picnics", icon: "🧺" });
       }
       if (temp < 41) {
-        recommendations.push({ text: 'Bundle up if going outside', icon: '🧥' });
+        recommendations.push({
+          text: "Bundle up if going outside",
+          icon: "🧥",
+        });
       }
     }
 
     // Condition-based recommendations
-    if (condition.includes('rain')) {
-      recommendations.push({ text: 'Take an umbrella', icon: '☂️' });
+    if (condition.includes("rain")) {
+      recommendations.push({ text: "Take an umbrella", icon: "☂️" });
     }
-    if (condition.includes('sun') || condition.includes('clear')) {
-      recommendations.push({ text: 'Great for photography', icon: '📸' });
+    if (condition.includes("sun") || condition.includes("clear")) {
+      recommendations.push({ text: "Great for photography", icon: "📸" });
     }
-    if (wind > (units === 'metric' ? 20 : 45)) {
-      recommendations.push({ text: 'Windy conditions - secure loose items', icon: '💨' });
+    if (wind > (units === "metric" ? 20 : 45)) {
+      recommendations.push({
+        text: "Windy conditions - secure loose items",
+        icon: "💨",
+      });
     }
 
     // Air quality recommendations
     if (aqi && aqi >= 3) {
-      recommendations.push({ text: 'Consider indoor activities due to air quality', icon: '🏠' });
+      recommendations.push({
+        text: "Consider indoor activities due to air quality",
+        icon: "🏠",
+      });
     }
 
     return recommendations.slice(0, 3); // Limit to top 3 recommendations
@@ -125,7 +147,6 @@ const WeatherInsights: React.FC<WeatherInsightsProps> = ({
       </h3>
 
       <div className="insights-grid">
-        
         {/* Comfort Level */}
         <div className="insight-card">
           <div className="insight-header">
@@ -136,7 +157,8 @@ const WeatherInsights: React.FC<WeatherInsightsProps> = ({
             {comfort.level}
           </div>
           <div className="insight-details">
-            {current.main.temp.toFixed(0)}{tempUnit} • {current.main.humidity}% humidity
+            {current.main.temp.toFixed(0)}
+            {tempUnit} • {current.main.humidity}% humidity
           </div>
         </div>
 
@@ -144,15 +166,16 @@ const WeatherInsights: React.FC<WeatherInsightsProps> = ({
         <div className="insight-card">
           <div className="insight-header">
             <span className="insight-icon">
-              {tempTrend === 'rising' ? '📈' : '📉'}
+              {tempTrend === "rising" ? "📈" : "📉"}
             </span>
             <h4>Temperature Trend</h4>
           </div>
           <div className="insight-value">
-            {tempTrend === 'rising' ? 'Rising' : 'Falling'}
+            {tempTrend === "rising" ? "Rising" : "Falling"}
           </div>
           <div className="insight-details">
-            {tempChange.toFixed(1)}{tempUnit} change expected
+            {tempChange.toFixed(1)}
+            {tempUnit} change expected
           </div>
         </div>
 
@@ -165,9 +188,7 @@ const WeatherInsights: React.FC<WeatherInsightsProps> = ({
           <div className="insight-value">
             {todayMax.toFixed(0)}° / {todayMin.toFixed(0)}°
           </div>
-          <div className="insight-details">
-            High / Low for today
-          </div>
+          <div className="insight-details">High / Low for today</div>
         </div>
 
         {/* Wind Conditions */}
@@ -177,11 +198,17 @@ const WeatherInsights: React.FC<WeatherInsightsProps> = ({
             <h4>Wind Conditions</h4>
           </div>
           <div className="insight-value">
-            {(current.wind.speed * (units === 'metric' ? 3.6 : 2.237)).toFixed(0)} {speedUnit}
+            {(current.wind.speed * (units === "metric" ? 3.6 : 2.237)).toFixed(
+              0
+            )}{" "}
+            {speedUnit}
           </div>
           <div className="insight-details">
-            {current.wind.speed < (units === 'metric' ? 5 : 11) ? 'Light breeze' :
-             current.wind.speed < (units === 'metric' ? 15 : 34) ? 'Moderate wind' : 'Strong wind'}
+            {current.wind.speed < (units === "metric" ? 5 : 11)
+              ? "Light breeze"
+              : current.wind.speed < (units === "metric" ? 15 : 34)
+              ? "Moderate wind"
+              : "Strong wind"}
           </div>
         </div>
 
@@ -192,12 +219,22 @@ const WeatherInsights: React.FC<WeatherInsightsProps> = ({
               <span className="insight-icon">🌬️</span>
               <h4>Air Quality</h4>
             </div>
-            <div className="insight-value" style={{ 
-              color: airQuality.list[0].main.aqi <= 2 ? '#10b981' : 
-                     airQuality.list[0].main.aqi === 3 ? '#f59e0b' : '#ef4444' 
-            }}>
-              {airQuality.list[0].main.aqi <= 2 ? 'Good' :
-               airQuality.list[0].main.aqi === 3 ? 'Moderate' : 'Poor'}
+            <div
+              className="insight-value"
+              style={{
+                color:
+                  airQuality.list[0].main.aqi <= 2
+                    ? "#10b981"
+                    : airQuality.list[0].main.aqi === 3
+                    ? "#f59e0b"
+                    : "#ef4444",
+              }}
+            >
+              {airQuality.list[0].main.aqi <= 2
+                ? "Good"
+                : airQuality.list[0].main.aqi === 3
+                ? "Moderate"
+                : "Poor"}
             </div>
             <div className="insight-details">
               AQI: {airQuality.list[0].main.aqi}/5
@@ -212,18 +249,21 @@ const WeatherInsights: React.FC<WeatherInsightsProps> = ({
             <h4>Visibility</h4>
           </div>
           <div className="insight-value">
-            {units === 'metric' 
+            {units === "metric"
               ? `${(current.visibility / 1000).toFixed(1)} km`
-              : `${(current.visibility * 0.000621371).toFixed(1)} mi`
-            }
+              : `${(current.visibility * 0.000621371).toFixed(1)} mi`}
           </div>
           <div className="insight-details">
-            {current.visibility >= 10000 ? 'Excellent' :
-             current.visibility >= 5000 ? 'Good' :
-             current.visibility >= 1000 ? 'Moderate' : 'Poor'} visibility
+            {current.visibility >= 10000
+              ? "Excellent"
+              : current.visibility >= 5000
+              ? "Good"
+              : current.visibility >= 1000
+              ? "Moderate"
+              : "Poor"}{" "}
+            visibility
           </div>
         </div>
-
       </div>
 
       {/* Activity Recommendations */}

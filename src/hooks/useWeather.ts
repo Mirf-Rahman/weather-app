@@ -43,7 +43,7 @@ export function useWeather(units: "metric" | "imperial") {
         try {
           aq = await fetchAirQuality(c.coord.lat, c.coord.lon);
         } catch (e) {
-          console.warn('Air quality data unavailable:', e);
+          console.warn("Air quality data unavailable:", e);
         }
 
         // Update cache with the fresh data
@@ -86,7 +86,7 @@ export function useWeather(units: "metric" | "imperial") {
         try {
           aq = await fetchAirQuality(lat, lon);
         } catch (e) {
-          console.warn('Air quality data unavailable:', e);
+          console.warn("Air quality data unavailable:", e);
         }
 
         setCurrent(c);
