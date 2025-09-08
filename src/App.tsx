@@ -6,6 +6,7 @@ import { ForecastGrid } from "./components/ForecastGrid";
 import WeatherCharts from "./components/WeatherCharts";
 import AirQuality from "./components/AirQuality";
 import WeatherInsights from "./components/WeatherInsights";
+import PrayerTimes from "./components/PrayerTimes";
 import { UnitToggle } from "./components/UnitToggle";
 import { ErrorMessage } from "./components/ErrorMessage";
 import { Loader } from "./components/Loader";
@@ -19,6 +20,7 @@ import "./styles/enhanced.css";
 import "./styles/theme.css";
 import "./styles/components.css";
 import "./styles/charts.css";
+import "./styles/prayer-times.css";
 
 export const App: React.FC = () => {
   const [units, setUnits] = useState<"metric" | "imperial">("metric");
@@ -33,8 +35,15 @@ export const App: React.FC = () => {
   const [theme, setTheme] = useState<"light" | "dark">(() => {
     return localStorage.getItem("theme") === "light" ? "light" : "dark";
   });
-  const { current, forecast, airQuality, loading, error, search, searchByCoords } =
-    useWeather(units);
+  const {
+    current,
+    forecast,
+    airQuality,
+    loading,
+    error,
+    search,
+    searchByCoords,
+  } = useWeather(units);
 
   useEffect(() => {
     const last = localStorage.getItem("lastCity");
@@ -354,11 +363,12 @@ export const App: React.FC = () => {
               />
             )}
 
+            {current && !loading && (
+              <PrayerTimes current={current} theme={theme} />
+            )}
+
             {airQuality && !loading && (
-              <AirQuality
-                data={airQuality}
-                theme={theme}
-              />
+              <AirQuality data={airQuality} theme={theme} />
             )}
 
             {current && forecast && !loading && (
