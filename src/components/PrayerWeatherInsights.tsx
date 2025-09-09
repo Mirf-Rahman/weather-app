@@ -1,6 +1,7 @@
 import React, { useMemo } from "react";
 import { CurrentWeather } from "../api/weather";
 import { PrayerTimings } from "../api/prayerTimes";
+import { getWeatherContextualQuote, getPrayerContextualQuote, getTimeBasedQuote, IslamicQuote } from "../data/islamicQuotes";
 
 interface PrayerWeatherInsightsProps {
   current: CurrentWeather;
@@ -9,60 +10,6 @@ interface PrayerWeatherInsightsProps {
   theme: "light" | "dark";
   cityName?: string;
 }
-
-// Islamic quotes with proper attribution
-const ISLAMIC_QUOTES = [
-  {
-    text: "And it is He who sends down rain from heaven, and We produce thereby the vegetation of every kind.",
-    source: "Quran 6:99",
-    theme: "weather"
-  },
-  {
-    text: "And We made from water every living thing. Will they not then believe?",
-    source: "Quran 21:30",
-    theme: "water"
-  },
-  {
-    text: "It is Allah who sends the winds, and they stir the clouds and spread them in the sky however He wills.",
-    source: "Quran 30:48",
-    theme: "wind"
-  },
-  {
-    text: "And He it is Who sends down rain after they have despaired, and He spreads His mercy.",
-    source: "Quran 42:28",
-    theme: "rain"
-  },
-  {
-    text: "Have you not seen that Allah drives clouds? Then He brings them together, then He makes them into a mass, and you see the rain emerge from within it.",
-    source: "Quran 24:43",
-    theme: "clouds"
-  },
-  {
-    text: "And among His Signs is that He shows you the lightning, by way both of fear and of hope, and He sends down rain from the sky and with it gives life to the earth after it is dead.",
-    source: "Quran 30:24",
-    theme: "lightning"
-  },
-  {
-    text: "Verily, in the creation of the heavens and the earth, and in the alternation of night and day, there are indeed signs for men of understanding.",
-    source: "Quran 3:190",
-    theme: "day"
-  },
-  {
-    text: "And it is He who created the heavens and earth in truth. And the day He says, 'Be,' and it is, His word is the truth.",
-    source: "Quran 6:73",
-    theme: "creation"
-  },
-  {
-    text: "And We have made the night and day as two signs, then We have made dark the sign of the night, and We have made the sign of day bright.",
-    source: "Quran 17:12",
-    theme: "time"
-  },
-  {
-    text: "Indeed, in the alternation of the night and the day and [in] what Allah has created in the heavens and the earth are signs for a people who fear Allah.",
-    source: "Quran 10:6",
-    theme: "signs"
-  }
-];
 
 const PrayerWeatherInsights: React.FC<PrayerWeatherInsightsProps> = ({
   current,
@@ -88,12 +35,35 @@ const PrayerWeatherInsights: React.FC<PrayerWeatherInsightsProps> = ({
     return weatherEmojis[weatherCode] || '🌤️';
   };
 
-  // Get daily quote based on date (consistent throughout the day)
-  const dailyQuote = useMemo(() => {
-    const today = new Date();
-    const dayOfYear = Math.floor((today.getTime() - new Date(today.getFullYear(), 0, 0).getTime()) / 1000 / 60 / 60 / 24);
-    return ISLAMIC_QUOTES[dayOfYear % ISLAMIC_QUOTES.length];
-  }, []);
+  // Get daily quote based on multiple contexts - weather, prayer time, and time of day
+  const dailyQuote: IslamicQuote = useMemo(() => {
+    const weatherMain = current.weather[0].main;
+    const currentHour = new Date().getHours();
+    
+    // Dynamic theme selection based on multiple factors
+    const timeBasedThemes = [];
+    
+    // Add time-based themes for more dynamic selection
+    if (currentHour >= 5 && currentHour < 12) {
+      timeBasedThemes.push('morning', 'fajr', 'dawn');
+    } else if (currentHour >= 12 && currentHour < 15) {
+      timeBasedThemes.push('midday', 'dhuhr', 'work');
+    } else if (currentHour >= 15 && currentHour < 18) {
+      timeBasedThemes.push('afternoon', 'asr', 'reflection');
+    } else if (currentHour >= 18 && currentHour < 21) {
+      timeBasedThemes.push('evening', 'maghrib', 'gratitude');
+    } else {
+      timeBasedThemes.push('night', 'isha', 'contemplation');
+    }
+    
+    // If we have prayer times, use prayer-specific quotes
+    if (nextPrayer) {
+      return getPrayerContextualQuote(nextPrayer.name);
+    }
+    
+    // Otherwise use weather and time contextual quote
+    return getWeatherContextualQuote(weatherMain, timeBasedThemes);
+  }, [current.weather, nextPrayer]);
 
   // If prayer times failed to load, show weather-only guidance
   if (!timings) {
@@ -150,15 +120,23 @@ const PrayerWeatherInsights: React.FC<PrayerWeatherInsightsProps> = ({
           <div className="quote-header">
             <span className="quote-icon">📖</span>
             <h4>Daily Reflection</h4>
-            <span className="quote-badge">Quran & Sunnah</span>
+            <span className={`quote-badge ${dailyQuote.category}`}>
+              {dailyQuote.category === 'quran' ? 'Holy Quran' : 'Authentic Hadith'}
+            </span>
           </div>
           <div className="quote-content">
+            {dailyQuote.textArabic && (
+              <div className="quote-arabic">
+                <p>{dailyQuote.textArabic}</p>
+              </div>
+            )}
             <div className="quote-text">
               <p>"{dailyQuote.text}"</p>
             </div>
             <div className="quote-source">
               <span className="source-icon">✨</span>
               <cite>— {dailyQuote.source}</cite>
+              <div className="source-details">{dailyQuote.sourceDetails}</div>
             </div>
           </div>
         </div>
@@ -381,15 +359,23 @@ const PrayerWeatherInsights: React.FC<PrayerWeatherInsightsProps> = ({
           <div className="quote-header">
             <span className="quote-icon">📖</span>
             <h4>Daily Reflection</h4>
-            <span className="quote-badge">Quran & Sunnah</span>
+            <span className={`quote-badge ${dailyQuote.category}`}>
+              {dailyQuote.category === 'quran' ? 'Holy Quran' : 'Authentic Hadith'}
+            </span>
           </div>
           <div className="quote-content">
+            {dailyQuote.textArabic && (
+              <div className="quote-arabic">
+                <p>{dailyQuote.textArabic}</p>
+              </div>
+            )}
             <div className="quote-text">
               <p>"{dailyQuote.text}"</p>
             </div>
             <div className="quote-source">
               <span className="source-icon">✨</span>
               <cite>— {dailyQuote.source}</cite>
+              <div className="source-details">{dailyQuote.sourceDetails}</div>
             </div>
           </div>
         </div>
@@ -471,15 +457,23 @@ const PrayerWeatherInsights: React.FC<PrayerWeatherInsightsProps> = ({
         <div className="quote-header">
           <span className="quote-icon">📖</span>
           <h4>Daily Reflection</h4>
-          <span className="quote-badge">Quran & Sunnah</span>
+          <span className={`quote-badge ${dailyQuote.category}`}>
+            {dailyQuote.category === 'quran' ? 'Holy Quran' : 'Authentic Hadith'}
+          </span>
         </div>
         <div className="quote-content">
+          {dailyQuote.textArabic && (
+            <div className="quote-arabic">
+              <p>{dailyQuote.textArabic}</p>
+            </div>
+          )}
           <div className="quote-text">
             <p>"{dailyQuote.text}"</p>
           </div>
           <div className="quote-source">
             <span className="source-icon">✨</span>
             <cite>— {dailyQuote.source}</cite>
+            <div className="source-details">{dailyQuote.sourceDetails}</div>
           </div>
         </div>
       </div>
