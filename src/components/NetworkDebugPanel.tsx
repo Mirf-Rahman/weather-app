@@ -9,6 +9,13 @@ interface NetworkTest {
   timestamp: string;
 }
 
+interface ConsoleLog {
+  timestamp: string;
+  level: 'log' | 'warn' | 'error';
+  message: string;
+  data?: any;
+}
+
 interface NetworkDebugPanelProps {
   latitude?: number;
   longitude?: number;
@@ -18,6 +25,7 @@ const NetworkDebugPanel: React.FC<NetworkDebugPanelProps> = ({ latitude, longitu
   const [isVisible, setIsVisible] = useState(false);
   const [tests, setTests] = useState<NetworkTest[]>([]);
   const [deviceInfo, setDeviceInfo] = useState<any>({});
+  const [consoleLogs, setConsoleLogs] = useState<ConsoleLog[]>([]);
 
   useEffect(() => {
     // Gather device information
@@ -35,6 +43,63 @@ const NetworkDebugPanel: React.FC<NetworkDebugPanelProps> = ({ latitude, longitu
       host: window.location.host
     };
     setDeviceInfo(info);
+
+    // Capture console logs for debugging
+    const originalLog = console.log;
+    const originalWarn = console.warn;
+    const originalError = console.error;
+
+    console.log = (...args: any[]) => {
+      const message = args.map(arg => 
+        typeof arg === 'object' ? JSON.stringify(arg) : String(arg)
+      ).join(' ');
+      
+      setConsoleLogs(prev => [...prev.slice(-19), {
+        timestamp: new Date().toISOString(),
+        level: 'log',
+        message,
+        data: args.length === 1 && typeof args[0] === 'object' ? args[0] : undefined
+      }]);
+      
+      originalLog.apply(console, args);
+    };
+
+    console.warn = (...args: any[]) => {
+      const message = args.map(arg => 
+        typeof arg === 'object' ? JSON.stringify(arg) : String(arg)
+      ).join(' ');
+      
+      setConsoleLogs(prev => [...prev.slice(-19), {
+        timestamp: new Date().toISOString(),
+        level: 'warn',
+        message,
+        data: args.length === 1 && typeof args[0] === 'object' ? args[0] : undefined
+      }]);
+      
+      originalWarn.apply(console, args);
+    };
+
+    console.error = (...args: any[]) => {
+      const message = args.map(arg => 
+        typeof arg === 'object' ? JSON.stringify(arg) : String(arg)
+      ).join(' ');
+      
+      setConsoleLogs(prev => [...prev.slice(-19), {
+        timestamp: new Date().toISOString(),
+        level: 'error',
+        message,
+        data: args.length === 1 && typeof args[0] === 'object' ? args[0] : undefined
+      }]);
+      
+      originalError.apply(console, args);
+    };
+
+    // Cleanup
+    return () => {
+      console.log = originalLog;
+      console.warn = originalWarn;
+      console.error = originalError;
+    };
   }, []);
 
   const runNetworkTests = async () => {
@@ -160,6 +225,36 @@ const NetworkDebugPanel: React.FC<NetworkDebugPanelProps> = ({ latitude, longitu
     setTests([...newTests]);
   };
 
+  const testPrayerTimesFlow = async () => {
+    if (!latitude || !longitude) {
+      alert('Location not available for prayer times test');
+      return;
+    }
+
+    console.log('🧪 Manual prayer times test started by user');
+    console.log('📍 Location:', { latitude, longitude });
+    
+    try {
+      // Import the actual function from your app
+      const { fetchPrayerTimes } = await import('../api/prayerTimes');
+      console.log('🔄 Calling fetchPrayerTimes directly...');
+      
+      const result = await fetchPrayerTimes(latitude, longitude);
+      console.log('✅ Prayer times test result:', result);
+      
+      if (result.data?.timings) {
+        console.log('✅ Prayer times received:', Object.keys(result.data.timings));
+        alert(`✅ Prayer times test SUCCESS! Got ${Object.keys(result.data.timings).length} prayer times.`);
+      } else {
+        console.error('❌ No timings in result:', result);
+        alert('❌ Prayer times test failed - no timings in response');
+      }
+    } catch (error) {
+      console.error('❌ Prayer times test error:', error);
+      alert(`❌ Prayer times test ERROR: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  };
+
   if (!isVisible) {
     return (
       <div style={{
@@ -265,6 +360,26 @@ const NetworkDebugPanel: React.FC<NetworkDebugPanelProps> = ({ latitude, longitu
           >
             🚀 Run Network Tests
           </button>
+          
+          <button
+            onClick={testPrayerTimesFlow}
+            disabled={!latitude || !longitude}
+            style={{
+              backgroundColor: '#007AFF',
+              color: 'white',
+              border: 'none',
+              borderRadius: '8px',
+              padding: '12px 24px',
+              fontSize: '14px',
+              fontWeight: 'bold',
+              cursor: 'pointer',
+              marginRight: '10px',
+            }}
+          >
+            🕌 Test Prayer Times
+          </button>
+          
+          <br />
           <span style={{ fontSize: '12px', color: '#999' }}>
             Location: {latitude ? `${latitude.toFixed(4)}, ${longitude?.toFixed(4)}` : 'Not available'}
           </span>
@@ -311,6 +426,70 @@ const NetworkDebugPanel: React.FC<NetworkDebugPanelProps> = ({ latitude, longitu
               </div>
             ))
           )}
+        </div>
+
+        <div style={{ marginTop: '30px' }}>
+          <h3>📋 Live Console Logs</h3>
+          <div style={{
+            backgroundColor: 'rgba(0,0,0,0.5)',
+            border: '1px solid #333',
+            borderRadius: '8px',
+            padding: '15px',
+            maxHeight: '300px',
+            overflowY: 'auto',
+            fontSize: '10px',
+            fontFamily: 'monospace'
+          }}>
+            {consoleLogs.length === 0 ? (
+              <p style={{ color: '#999', margin: '0' }}>Waiting for console activity...</p>
+            ) : (
+              consoleLogs.slice(-10).map((log, index) => (
+                <div key={index} style={{
+                  marginBottom: '8px',
+                  padding: '5px',
+                  borderRadius: '4px',
+                  backgroundColor: log.level === 'error' ? 'rgba(255,59,48,0.2)' :
+                                 log.level === 'warn' ? 'rgba(255,149,0,0.2)' : 
+                                 'rgba(52,199,89,0.1)'
+                }}>
+                  <div style={{ 
+                    display: 'flex', 
+                    justifyContent: 'space-between', 
+                    alignItems: 'center',
+                    marginBottom: '4px'
+                  }}>
+                    <span style={{
+                      color: log.level === 'error' ? '#FF3B30' :
+                            log.level === 'warn' ? '#FF9500' : '#34C759',
+                      fontWeight: 'bold'
+                    }}>
+                      {log.level === 'error' ? '❌' : log.level === 'warn' ? '⚠️' : 'ℹ️'} {log.level.toUpperCase()}
+                    </span>
+                    <span style={{ color: '#999', fontSize: '9px' }}>
+                      {new Date(log.timestamp).toLocaleTimeString()}
+                    </span>
+                  </div>
+                  <div style={{ color: '#fff', wordBreak: 'break-word' }}>
+                    {log.message}
+                  </div>
+                  {log.data && (
+                    <div style={{ 
+                      color: '#ccc', 
+                      fontSize: '9px', 
+                      marginTop: '4px',
+                      maxHeight: '100px',
+                      overflow: 'auto'
+                    }}>
+                      {JSON.stringify(log.data, null, 2)}
+                    </div>
+                  )}
+                </div>
+              ))
+            )}
+          </div>
+          <div style={{ marginTop: '10px', fontSize: '9px', color: '#666' }}>
+            📱 Shows last 10 console messages in real-time • Prayer times debug info will appear here
+          </div>
         </div>
 
         <div style={{ marginTop: '30px', fontSize: '10px', color: '#666' }}>
