@@ -100,6 +100,55 @@ export const PRAYER_METHODS: PrayerMethod[] = [
  * @param method - Prayer calculation method ID (default: 2 for ISNA)
  * @param school - Jurisprudence school (0 = Shafi, 1 = Hanafi)
  */
+/**
+ * Fetch prayer times using native fetch as fallback for iOS Safari
+ */
+async function fetchWithFallback(url: string, config: any): Promise<any> {
+  // First try with axios
+  try {
+    console.log('Trying axios request...');
+    const response = await axios.get(url, config);
+    return response.data;
+  } catch (axiosError) {
+    console.warn('Axios failed, trying fetch fallback:', axiosError);
+    
+    // Fallback to native fetch for iOS Safari
+    try {
+      console.log('Trying native fetch...');
+      const fetchConfig: RequestInit = {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+        },
+        mode: 'cors', // Important for cross-origin requests
+        cache: 'no-cache',
+        credentials: 'omit', // Don't send cookies
+      };
+
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), config.timeout || 15000);
+      
+      const response = await fetch(url, {
+        ...fetchConfig,
+        signal: controller.signal,
+      });
+      
+      clearTimeout(timeoutId);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+      
+      const data = await response.json();
+      return data;
+    } catch (fetchError) {
+      console.error('Both axios and fetch failed:', { axiosError, fetchError });
+      throw fetchError;
+    }
+  }
+}
+
 export async function fetchPrayerTimes(
   latitude: number,
   longitude: number,
@@ -124,41 +173,40 @@ export async function fetchPrayerTimes(
     
     // iOS Safari specific configuration
     const config = {
-      timeout: isIOSSafari() ? 20000 : 15000, // Longer timeout for iOS Safari
+      timeout: isIOSSafari() ? 25000 : 15000, // Even longer timeout for iOS Safari
       headers: {
         'Accept': 'application/json',
         'Content-Type': 'application/json',
         'Cache-Control': 'no-cache',
-        // iOS Safari sometimes needs different headers
-        ...(isIOSSafari() && {
-          'X-Requested-With': 'XMLHttpRequest',
-          'Sec-Fetch-Mode': 'cors',
-          'Sec-Fetch-Site': 'cross-site'
-        })
       },
       validateStatus: (status: number) => status >= 200 && status < 300,
-      // Disable automatic request/response transformation for iOS
-      transformRequest: [(data: any) => data],
-      transformResponse: [(data: any) => {
-        try {
-          return JSON.parse(data);
-        } catch {
-          return data;
-        }
-      }],
       withCredentials: false, // Important for CORS on iOS Safari
     };
 
     console.log(`Fetching prayer times from: ${url}`);
-    const response = await axios.get<PrayerTimesResponse>(url, config);
+    const data = await fetchWithFallback(url, config);
 
-    if (response.data.code !== 200) {
-      throw new Error(`Prayer times API error: ${response.data.status}`);
+    if (data.code !== 200) {
+      throw new Error(`Prayer times API error: ${data.status}`);
     }
 
-    return response.data;
+    return data;
   } catch (error) {
     console.error('Prayer times fetch error:', error);
+    
+    // More specific error handling for iOS Safari
+    if (error instanceof Error) {
+      if (error.name === 'AbortError') {
+        throw new Error('Request timed out. Please check your internet connection.');
+      }
+      if (error.message.includes('NetworkError') || error.message.includes('Failed to fetch')) {
+        throw new Error('Cannot connect to prayer times service. Please check if you have a stable internet connection.');
+      }
+      if (error.message.includes('CORS')) {
+        throw new Error('Browser blocked the request. Please try refreshing the page.');
+      }
+    }
+    
     if (axios.isAxiosError(error)) {
       if (error.code === 'NETWORK_ERROR' || error.message.includes('Network Error')) {
         throw new Error('Network connection failed. Please check your internet connection and try again.');
@@ -169,9 +217,9 @@ export async function fetchPrayerTimes(
       if (error.response?.status === 0) {
         throw new Error('Cannot connect to prayer times service. Please check if you have internet access.');
       }
-      throw new Error(`Failed to fetch prayer times: ${error.message}`);
     }
-    throw error;
+    
+    throw new Error(`Prayer times unavailable: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 }
 
