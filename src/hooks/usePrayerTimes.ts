@@ -195,7 +195,7 @@ export function usePrayerTimes(
     }
   }, [state.timings]);
 
-  // Schedule notifications
+  // Schedule notifications with enhanced 15-minute alerts
   useEffect(() => {
     if (!notificationsEnabled || !state.timings) return;
 
@@ -204,35 +204,67 @@ export function usePrayerTimes(
       const prayerTime = new Date();
       prayerTime.setHours(hours, minutes, 0, 0);
       
-      const notificationTime = new Date(prayerTime.getTime() - notification.minutesBefore * 60000);
+      // Schedule 15-minute warning
+      const warningTime = new Date(prayerTime.getTime() - 15 * 60000);
       const now = new Date();
       
-      if (notificationTime > now) {
-        const timeUntilNotification = notificationTime.getTime() - now.getTime();
+      if (warningTime > now) {
+        const timeUntilWarning = warningTime.getTime() - now.getTime();
         
         setTimeout(() => {
           if ('serviceWorker' in navigator && 'Notification' in window) {
             if (Notification.permission === 'granted') {
-              new Notification(`${notification.prayerName} Prayer`, {
-                body: `${notification.prayerName} prayer time is in ${notification.minutesBefore} minutes (${notification.time})`,
+              new Notification(`🕌 ${notification.prayerName} Prayer Alert`, {
+                body: `${notification.prayerName} prayer time is in 15 minutes (${notification.time}).\nPrepare for prayer and make wudu.`,
                 icon: '/prayer-icon.png',
                 badge: '/prayer-badge.png',
-                tag: `prayer-${notification.id}`,
-                requireInteraction: false,
+                tag: `prayer-warning-${notification.id}`,
+                requireInteraction: true,
                 silent: false
               });
             }
           }
-        }, timeUntilNotification);
+        }, timeUntilWarning);
+      }
+
+      // Schedule exact prayer time notification
+      if (prayerTime > now) {
+        const timeUntilPrayer = prayerTime.getTime() - now.getTime();
+        
+        setTimeout(() => {
+          if ('serviceWorker' in navigator && 'Notification' in window) {
+            if (Notification.permission === 'granted') {
+              new Notification(`🕌 ${notification.prayerName} Prayer Time`, {
+                body: `It's time for ${notification.prayerName} prayer. الله أكبر`,
+                icon: '/prayer-icon.png',
+                badge: '/prayer-badge.png',
+                tag: `prayer-time-${notification.id}`,
+                requireInteraction: true,
+                silent: false
+              });
+            }
+          }
+        }, timeUntilPrayer);
       }
     };
 
-    notifications.forEach(notification => {
+    // Reset notifications array with current timings
+    const enhancedNotifications: PrayerNotification[] = [
+      { id: 'fajr', prayerName: 'Fajr', time: state.timings.Fajr, minutesBefore: 15, enabled: true },
+      { id: 'dhuhr', prayerName: 'Dhuhr', time: state.timings.Dhuhr, minutesBefore: 15, enabled: true },
+      { id: 'asr', prayerName: 'Asr', time: state.timings.Asr, minutesBefore: 15, enabled: true },
+      { id: 'maghrib', prayerName: 'Maghrib', time: state.timings.Maghrib, minutesBefore: 15, enabled: true },
+      { id: 'isha', prayerName: 'Isha', time: state.timings.Isha, minutesBefore: 15, enabled: true },
+    ];
+
+    setNotifications(enhancedNotifications);
+
+    enhancedNotifications.forEach(notification => {
       if (notification.enabled) {
         scheduleNotification(notification);
       }
     });
-  }, [notifications, notificationsEnabled, state.timings]);
+  }, [notificationsEnabled, state.timings]);
 
   // Request notification permission
   const requestNotificationPermission = useCallback(async () => {
