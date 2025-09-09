@@ -1,6 +1,5 @@
 import axios from "axios";
 import { isIOSSafari } from "../utils/deviceDetection";
-import { debugPrayerTimes } from "../utils/iosDebugger";
 
 const ALADHAN_BASE_URL = "https://api.aladhan.com/v1";
 
@@ -108,17 +107,14 @@ async function fetchWithFallback(url: string, config: any): Promise<any> {
   // First try with axios
   try {
     console.log('🔄 Trying axios request...');
-    debugPrayerTimes.logApiCall('fetchWithFallback-axios', { url, config });
     
     const response = await axios.get(url, config);
     
     console.log('✅ Axios success! Response:', response.status, response.data);
-    debugPrayerTimes.logApiSuccess(response.data);
     
     return response.data;
   } catch (axiosError) {
     console.warn('❌ Axios failed, trying fetch fallback:', axiosError);
-    debugPrayerTimes.logApiError(axiosError);
     
     // Fallback to native fetch for iOS Safari
     try {
@@ -173,17 +169,6 @@ export async function fetchPrayerTimes(
     // But complex format fails in production: https://api.aladhan.com/v1/timings/09-09-2025?...
     const url = `${ALADHAN_BASE_URL}/timings?latitude=${latitude}&longitude=${longitude}&method=${method}&school=${school}`;
     
-    debugPrayerTimes.logApiCall(url, { 
-      latitude, 
-      longitude,
-      date: dateParam, 
-      method, 
-      school,
-      isIOSSafari: isIOSSafari(),
-      simplified: true,
-      reason: 'Using simple URL that works on both iOS and PC'
-    });
-    
     console.log(`🔄 Fetching prayer times from simplified URL: ${url}`);
     
     // Use axios directly since debug shows it works on both platforms with simple URL
@@ -201,15 +186,12 @@ export async function fetchPrayerTimes(
     if (data.code !== 200) {
       const apiError = new Error(`Prayer times API error: ${data.status}`);
       console.error('❌ API returned error code:', data.code, data.status);
-      debugPrayerTimes.logApiError({ code: data.code, status: data.status });
       throw apiError;
     }
     
-    debugPrayerTimes.logApiSuccess(data);
     return data;
   } catch (error) {
     console.error('Prayer times fetch error:', error);
-    debugPrayerTimes.logApiError(error);
     
     // More specific error handling for iOS Safari
     if (error instanceof Error) {

@@ -9,7 +9,6 @@ import {
   PRAYER_METHODS
 } from "../api/prayerTimes";
 import { getApproximatePrayerTimes } from "../utils/localPrayerTimes";
-import { debugPrayerTimes } from "../utils/iosDebugger";
 import { isIOSSafari } from "../utils/deviceDetection";
 
 export interface PrayerTimesState {
@@ -120,7 +119,6 @@ export function usePrayerTimes(
         } catch (error) {
           lastError = error as Error;
           console.warn(`❌ Prayer times fetch attempt ${attempt} failed:`, error);
-          debugPrayerTimes.logApiError({ attempt, error: error instanceof Error ? error.message : error });
           
           // If it's a network error and we have cached data, use it
           if (cachedData && (error as Error).message.includes('Network')) {
@@ -201,12 +199,10 @@ export function usePrayerTimes(
         message: errorMessage,
         isIOS: isIOSSafari()
       });
-      debugPrayerTimes.logApiError({ hookError: errorMessage, isIOSSafari: isIOSSafari() });
       
       // Try local calculation as final fallback
       try {
         console.log('🔄 Attempting local prayer times calculation...', { isIOS: isIOSSafari() });
-        debugPrayerTimes.logFallback(errorMessage);
         
         const localTimes = getApproximatePrayerTimes('your location', lat, lon);
         const nextPrayer = getNextPrayer(localTimes);
