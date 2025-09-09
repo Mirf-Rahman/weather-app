@@ -1,4 +1,5 @@
 import axios from "axios";
+import { isIOSSafari } from "../utils/deviceDetection";
 
 const ALADHAN_BASE_URL = "https://api.aladhan.com/v1";
 
@@ -109,24 +110,47 @@ export async function fetchPrayerTimes(
   try {
     const dateParam = date || formatDate(new Date());
     
-    const response = await axios.get<PrayerTimesResponse>(
-      `${ALADHAN_BASE_URL}/timings/${dateParam}`,
-      {
-        params: {
-          latitude: latitude.toFixed(6),
-          longitude: longitude.toFixed(6),
-          method,
-          school,
-          midnightMode: 0, // Middle of the night
-          latitudeAdjustmentMethod: 3, // Angle-based method
-        },
-        timeout: 10000,
-        headers: {
-          'Accept': 'application/json',
-          'User-Agent': 'Weather-App-Prayer-Times/1.0'
+    // Build URL with parameters for better iOS Safari compatibility
+    const params = new URLSearchParams({
+      latitude: latitude.toFixed(6),
+      longitude: longitude.toFixed(6),
+      method: method.toString(),
+      school: school.toString(),
+      midnightMode: '0',
+      latitudeAdjustmentMethod: '3'
+    });
+
+    const url = `${ALADHAN_BASE_URL}/timings/${dateParam}?${params}`;
+    
+    // iOS Safari specific configuration
+    const config = {
+      timeout: isIOSSafari() ? 20000 : 15000, // Longer timeout for iOS Safari
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+        'Cache-Control': 'no-cache',
+        // iOS Safari sometimes needs different headers
+        ...(isIOSSafari() && {
+          'X-Requested-With': 'XMLHttpRequest',
+          'Sec-Fetch-Mode': 'cors',
+          'Sec-Fetch-Site': 'cross-site'
+        })
+      },
+      validateStatus: (status: number) => status >= 200 && status < 300,
+      // Disable automatic request/response transformation for iOS
+      transformRequest: [(data: any) => data],
+      transformResponse: [(data: any) => {
+        try {
+          return JSON.parse(data);
+        } catch {
+          return data;
         }
-      }
-    );
+      }],
+      withCredentials: false, // Important for CORS on iOS Safari
+    };
+
+    console.log(`Fetching prayer times from: ${url}`);
+    const response = await axios.get<PrayerTimesResponse>(url, config);
 
     if (response.data.code !== 200) {
       throw new Error(`Prayer times API error: ${response.data.status}`);
@@ -134,7 +158,17 @@ export async function fetchPrayerTimes(
 
     return response.data;
   } catch (error) {
+    console.error('Prayer times fetch error:', error);
     if (axios.isAxiosError(error)) {
+      if (error.code === 'NETWORK_ERROR' || error.message.includes('Network Error')) {
+        throw new Error('Network connection failed. Please check your internet connection and try again.');
+      }
+      if (error.code === 'ECONNABORTED') {
+        throw new Error('Request timeout. Please check your connection and try again.');
+      }
+      if (error.response?.status === 0) {
+        throw new Error('Cannot connect to prayer times service. Please check if you have internet access.');
+      }
       throw new Error(`Failed to fetch prayer times: ${error.message}`);
     }
     throw error;
