@@ -424,7 +424,7 @@ export const App: React.FC = () => {
               />
             )}
 
-            {current && !loading && prayerTimesData.timings && (
+            {current && !loading && (
               <PrayerWeatherInsights
                 current={current}
                 timings={prayerTimesData.timings}
