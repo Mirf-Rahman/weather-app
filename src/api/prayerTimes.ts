@@ -168,6 +168,46 @@ export async function fetchPrayerTimes(
   try {
     const dateParam = date || formatDate(new Date());
     
+    // For iOS Safari, use the simplified URL that we know works from debug testing
+    if (isIOSSafari()) {
+      console.log('📱 iOS Safari detected - using simplified URL');
+      
+      const url = `${ALADHAN_BASE_URL}/timings?latitude=${latitude}&longitude=${longitude}&method=${method}&school=${school}`;
+      
+      debugPrayerTimes.logApiCall(url, { 
+        latitude, 
+        longitude, 
+        method, 
+        school,
+        isIOSSafari: true,
+        simplified: true
+      });
+      
+      console.log(`🔄 iOS Safari - Fetching from simplified URL: ${url}`);
+      
+      const response = await axios.get(url, {
+        timeout: 25000,
+        headers: {
+          'Accept': 'application/json',
+        },
+        withCredentials: false,
+      });
+      
+      const data = response.data;
+      console.log('✅ iOS Safari simplified URL success!', { code: data.code, hasTimings: !!data.data?.timings });
+      
+      if (data.code !== 200) {
+        const apiError = new Error(`Prayer times API error: ${data.status}`);
+        console.error('❌ API returned error code:', data.code, data.status);
+        debugPrayerTimes.logApiError({ code: data.code, status: data.status });
+        throw apiError;
+      }
+      
+      debugPrayerTimes.logApiSuccess(data);
+      return data;
+    }
+    
+    // For other browsers, use the complex URL with all parameters
     // Build URL with parameters for better iOS Safari compatibility
     const params = new URLSearchParams({
       latitude: latitude.toFixed(6),
