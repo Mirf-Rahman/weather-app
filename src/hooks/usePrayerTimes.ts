@@ -111,16 +111,18 @@ export function usePrayerTimes(
       
       for (let attempt = 1; attempt <= 3; attempt++) {
         try {
-          console.log(`Fetching prayer times (attempt ${attempt}/3):`, { lat, lon, method, school });
+          console.log(`🔄 Fetching prayer times (attempt ${attempt}/3):`, { lat, lon, method, school });
           response = await fetchPrayerTimes(lat, lon, undefined, method, school);
+          console.log('✅ Prayer times fetch successful in hook!', { hasResponse: !!response });
           break;
         } catch (error) {
           lastError = error as Error;
-          console.warn(`Prayer times fetch attempt ${attempt} failed:`, error);
+          console.warn(`❌ Prayer times fetch attempt ${attempt} failed:`, error);
+          debugPrayerTimes.logApiError({ attempt, error: error instanceof Error ? error.message : error });
           
           // If it's a network error and we have cached data, use it
           if (cachedData && (error as Error).message.includes('Network')) {
-            console.log('Using cached data due to network error');
+            console.log('📦 Using cached data due to network error');
             const timings = cachedData.data.timings;
             const nextPrayer = getNextPrayer(timings);
             const currentWindow = getCurrentPrayerWindow(timings);
@@ -147,6 +149,7 @@ export function usePrayerTimes(
       }
       
       if (!response && lastError) {
+        console.error('🚨 All prayer times attempts failed, throwing error:', lastError);
         throw lastError;
       }
 

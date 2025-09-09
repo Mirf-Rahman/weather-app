@@ -107,15 +107,22 @@ export const PRAYER_METHODS: PrayerMethod[] = [
 async function fetchWithFallback(url: string, config: any): Promise<any> {
   // First try with axios
   try {
-    console.log('Trying axios request...');
+    console.log('🔄 Trying axios request...');
+    debugPrayerTimes.logApiCall('fetchWithFallback-axios', { url, config });
+    
     const response = await axios.get(url, config);
+    
+    console.log('✅ Axios success! Response:', response.status, response.data);
+    debugPrayerTimes.logApiSuccess(response.data);
+    
     return response.data;
   } catch (axiosError) {
-    console.warn('Axios failed, trying fetch fallback:', axiosError);
+    console.warn('❌ Axios failed, trying fetch fallback:', axiosError);
+    debugPrayerTimes.logApiError(axiosError);
     
     // Fallback to native fetch for iOS Safari
     try {
-      console.log('Trying native fetch...');
+      console.log('🔄 Trying native fetch...');
       const fetchConfig: RequestInit = {
         method: 'GET',
         headers: {
@@ -142,9 +149,10 @@ async function fetchWithFallback(url: string, config: any): Promise<any> {
       }
       
       const data = await response.json();
+      console.log('✅ Fetch success! Data:', data);
       return data;
     } catch (fetchError) {
-      console.error('Both axios and fetch failed:', { axiosError, fetchError });
+      console.error('❌ Both axios and fetch failed:', { axiosError, fetchError });
       throw fetchError;
     }
   }
@@ -194,15 +202,57 @@ export async function fetchPrayerTimes(
       withCredentials: false, // Important for CORS on iOS Safari
     };
 
-    console.log(`Fetching prayer times from: ${url}`);
+    console.log(`🔄 Fetching prayer times from: ${url}`);
+    
+    // For iOS Safari, use axios directly since debug shows it works perfectly
+    if (isIOSSafari()) {
+      console.log('📱 iOS Safari detected - using axios directly');
+      const response = await axios.get(url, {
+        timeout: 25000,
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+          'Cache-Control': 'no-cache',
+        },
+        validateStatus: (status: number) => status >= 200 && status < 300,
+        withCredentials: false,
+      });
+      
+      const data = response.data;
+      console.log('✅ iOS Safari axios success!', { code: data.code, hasTimings: !!data.data?.timings });
+      
+      if (data.code !== 200) {
+        const apiError = new Error(`Prayer times API error: ${data.status}`);
+        console.error('❌ API returned error code:', data.code, data.status);
+        debugPrayerTimes.logApiError({ code: data.code, status: data.status });
+        throw apiError;
+      }
+      
+      debugPrayerTimes.logApiSuccess(data);
+      return data;
+    }
+    
+    // For other browsers, use the fallback system
     const data = await fetchWithFallback(url, config);
+
+    console.log('🔍 Got data from fetchWithFallback:', { 
+      hasData: !!data, 
+      code: data?.code, 
+      status: data?.status,
+      hasTimings: !!data?.data?.timings 
+    });
 
     if (data.code !== 200) {
       const apiError = new Error(`Prayer times API error: ${data.status}`);
+      console.error('❌ API returned error code:', data.code, data.status);
       debugPrayerTimes.logApiError({ code: data.code, status: data.status });
       throw apiError;
     }
 
+    console.log('✅ Prayer times fetch successful!', { 
+      code: data.code, 
+      timingsKeys: Object.keys(data.data?.timings || {})
+    });
     debugPrayerTimes.logApiSuccess(data);
     return data;
   } catch (error) {
