@@ -8,6 +8,7 @@ import {
   getCurrentPrayerWindow,
   PRAYER_METHODS
 } from "../api/prayerTimes";
+import { getApproximatePrayerTimes } from "../utils/localPrayerTimes";
 
 export interface PrayerTimesState {
   timings: PrayerTimings | null;
@@ -174,12 +175,37 @@ export function usePrayerTimes(
 
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to fetch prayer times';
+      console.error('Error fetching prayer times:', err);
+      
+      // Try local calculation as final fallback
+      try {
+        console.log('Attempting local prayer times calculation...');
+        const localTimes = getApproximatePrayerTimes('your location', lat, lon);
+        const nextPrayer = getNextPrayer(localTimes);
+        const currentWindow = getCurrentPrayerWindow(localTimes);
+        
+        setState(prev => ({
+          ...prev,
+          timings: localTimes,
+          hijriDate: null, // Not available in local calculation
+          nextPrayer,
+          currentPrayerWindow: currentWindow,
+          loading: false,
+          error: 'Using approximate times (network unavailable)',
+          lastUpdated: Date.now(),
+        }));
+        
+        console.log('Local prayer times calculated successfully');
+        return;
+      } catch (localError) {
+        console.error('Local calculation also failed:', localError);
+      }
+      
       setState(prev => ({
         ...prev,
         loading: false,
         error: errorMessage,
       }));
-      console.error('Error fetching prayer times:', err);
     }
   }, [method, school, getCacheKey, getCurrentDateKey]);
 
