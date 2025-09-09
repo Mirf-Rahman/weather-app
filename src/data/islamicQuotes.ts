@@ -522,63 +522,98 @@ export const getDailyQuote = (date: Date): IslamicQuote => {
   return ISLAMIC_QUOTES[dayOfYear % ISLAMIC_QUOTES.length];
 };
 
-export const getWeatherContextualQuote = (weatherMain: string, themes: string[] = [], currentPrayer?: string): IslamicQuote => {
-  // Weather-specific theme mapping
+export const getWeatherContextualQuote = (
+  weatherMain: string, 
+  themes: string[] = [], 
+  currentPrayer?: string,
+  cityName?: string,
+  temperature?: number,
+  humidity?: number
+): IslamicQuote => {
+  // Enhanced weather-specific theme mapping with temperature context
   const weatherThemes: { [key: string]: string[] } = {
-    'Rain': ['rain', 'water', 'mercy', 'blessing'],
-    'Drizzle': ['rain', 'water', 'mercy'],
-    'Thunderstorm': ['thunder', 'lightning', 'weather', 'protection'],
-    'Snow': ['weather', 'creation', 'signs'],
-    'Clear': ['creation', 'signs', 'day', 'blessing'],
-    'Clouds': ['clouds', 'weather', 'signs'],
-    'Mist': ['creation', 'signs'],
-    'Fog': ['creation', 'signs']
+    'Rain': ['rain', 'water', 'mercy', 'blessing', 'relief'],
+    'Drizzle': ['rain', 'water', 'mercy', 'gentle'],
+    'Thunderstorm': ['thunder', 'lightning', 'weather', 'protection', 'power'],
+    'Snow': ['weather', 'creation', 'signs', 'purity', 'cold'],
+    'Clear': ['creation', 'signs', 'day', 'blessing', 'gratitude'],
+    'Clouds': ['clouds', 'weather', 'signs', 'shade', 'protection'],
+    'Mist': ['creation', 'signs', 'mystery'],
+    'Fog': ['creation', 'signs', 'patience'],
+    'Haze': ['creation', 'signs', 'clarity'],
+    'Dust': ['creation', 'humility', 'earth']
   };
 
-  // Prayer-specific theme mapping
+  // Enhanced prayer-specific theme mapping
   const prayerThemes: { [key: string]: string[] } = {
-    'Fajr': ['fajr', 'morning', 'dawn', 'protection'],
-    'Dhuhr': ['midday', 'work', 'sustenance'],
-    'Asr': ['asr', 'afternoon', 'angels'],
-    'Maghrib': ['evening', 'sunset', 'reflection'],
-    'Isha': ['night', 'rest', 'peace']
+    'Fajr': ['fajr', 'morning', 'dawn', 'protection', 'new_beginning'],
+    'Dhuhr': ['midday', 'work', 'sustenance', 'strength'],
+    'Asr': ['asr', 'afternoon', 'angels', 'reflection'],
+    'Maghrib': ['evening', 'sunset', 'reflection', 'gratitude'],
+    'Isha': ['night', 'rest', 'peace', 'contemplation']
   };
 
-  // Time-based themes
+  // Temperature-based themes
+  const tempThemes = [];
+  if (temperature !== undefined) {
+    if (temperature > 35) tempThemes.push('heat', 'patience', 'shade');
+    else if (temperature > 25) tempThemes.push('blessing', 'comfort');
+    else if (temperature > 15) tempThemes.push('gratitude', 'balance');
+    else if (temperature > 0) tempThemes.push('cold', 'warmth', 'shelter');
+    else tempThemes.push('cold', 'patience', 'protection');
+  }
+
+  // Time-based themes with local context
   const hour = new Date().getHours();
   const timeThemes = [];
   
-  if (hour >= 5 && hour < 7) {
-    timeThemes.push('fajr', 'morning', 'dawn');
-  } else if (hour >= 12 && hour < 14) {
-    timeThemes.push('midday', 'dhuhr');
-  } else if (hour >= 15 && hour < 17) {
-    timeThemes.push('asr', 'afternoon');
-  } else if (hour >= 18 && hour < 20) {
-    timeThemes.push('maghrib', 'evening');
-  } else if (hour >= 20 || hour < 5) {
-    timeThemes.push('isha', 'night');
-  }
+  if (hour >= 4 && hour < 7) timeThemes.push('dawn', 'fajr', 'morning');
+  else if (hour >= 7 && hour < 12) timeThemes.push('morning', 'work', 'blessing');
+  else if (hour >= 12 && hour < 15) timeThemes.push('midday', 'dhuhr', 'sustenance');
+  else if (hour >= 15 && hour < 18) timeThemes.push('afternoon', 'asr', 'reflection');
+  else if (hour >= 18 && hour < 20) timeThemes.push('evening', 'maghrib', 'gratitude');
+  else if (hour >= 20 && hour < 22) timeThemes.push('night', 'isha', 'peace');
+  else timeThemes.push('late_night', 'rest', 'contemplation');
 
-  const relevantThemes = [
-    ...themes, 
-    ...(weatherThemes[weatherMain] || ['creation', 'signs']),
+  // Combine all themes for comprehensive matching
+  const allThemes = [
+    ...(weatherThemes[weatherMain] || []),
     ...(currentPrayer ? prayerThemes[currentPrayer] || [] : []),
-    ...timeThemes
+    ...timeThemes,
+    ...tempThemes,
+    ...themes
   ];
 
-  const contextualQuotes = getQuotesByTheme(relevantThemes);
+  // Location-aware seeding for different cities
+  let locationSeed = 0;
+  if (cityName) {
+    locationSeed = cityName.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+  }
+
+  // Time-based seed that changes throughout the day
+  const today = new Date();
+  const dayOfYear = Math.floor((today.getTime() - new Date(today.getFullYear(), 0, 0).getTime()) / 1000 / 60 / 60 / 24);
+  const hourSeed = Math.floor(hour / 2); // Changes every 2 hours
+  
+  // Weather-based seed
+  const weatherSeed = weatherMain.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+  
+  // Create unique seed combining location, date, time, weather, and temperature
+  const combinedSeed = (dayOfYear * 1000) + (hourSeed * 100) + (locationSeed % 100) + (weatherSeed % 10) + (temperature ? Math.floor(temperature) % 10 : 0);
+
+  // Get contextual quotes
+  const contextualQuotes = getQuotesByTheme(allThemes);
   
   if (contextualQuotes.length > 0) {
-    // Use date and hour to ensure consistency but add some variation
-    const today = new Date();
-    const dayOfYear = Math.floor((today.getTime() - new Date(today.getFullYear(), 0, 0).getTime()) / 1000 / 60 / 60 / 24);
-    const hourVariation = Math.floor(today.getHours() / 3); // Changes 8 times per day
-    const index = (dayOfYear + hourVariation) % contextualQuotes.length;
+    // Use combined seed for location/weather/time-specific but consistent selection
+    const index = combinedSeed % contextualQuotes.length;
     return contextualQuotes[index];
   }
-  
-  return getDailyQuote(new Date());
+
+  // Fallback to daily quote with location seed
+  const allQuotes = ISLAMIC_QUOTES;
+  const fallbackIndex = combinedSeed % allQuotes.length;
+  return allQuotes[fallbackIndex];;
 };
 
 // Get prayer-specific quotes for enhanced contextual experience
@@ -630,4 +665,64 @@ export const getTimeBasedQuote = (): IslamicQuote => {
   }
   
   return getDailyQuote(new Date());
+};
+// Function to get a different quote from the same context (for refresh button)
+export const getAlternativeContextualQuote = (
+  weatherMain: string, 
+  themes: string[] = [], 
+  currentPrayer?: string,
+  cityName?: string,
+  temperature?: number,
+  humidity?: number,
+  currentQuoteText?: string
+): IslamicQuote => {
+  // Enhanced weather-specific theme mapping (same as main function)
+  const weatherThemes: { [key: string]: string[] } = {
+    'Rain': ['rain', 'water', 'mercy', 'blessing', 'relief'],
+    'Drizzle': ['rain', 'water', 'mercy', 'gentle'],
+    'Thunderstorm': ['thunder', 'lightning', 'weather', 'protection', 'power'],
+    'Snow': ['weather', 'creation', 'signs', 'purity', 'cold'],
+    'Clear': ['creation', 'signs', 'day', 'blessing', 'gratitude'],
+    'Clouds': ['clouds', 'weather', 'signs', 'shade', 'protection'],
+    'Mist': ['creation', 'signs', 'mystery'],
+    'Fog': ['creation', 'signs', 'patience'],
+    'Haze': ['creation', 'signs', 'clarity'],
+    'Dust': ['creation', 'humility', 'earth']
+  };
+
+  const prayerThemes: { [key: string]: string[] } = {
+    'Fajr': ['fajr', 'morning', 'dawn', 'protection', 'new_beginning'],
+    'Dhuhr': ['midday', 'work', 'sustenance', 'strength'],
+    'Asr': ['asr', 'afternoon', 'angels', 'reflection'],
+    'Maghrib': ['evening', 'sunset', 'reflection', 'gratitude'],
+    'Isha': ['night', 'rest', 'peace', 'contemplation']
+  };
+
+  // Combine relevant themes
+  const allThemes = [
+    ...(weatherThemes[weatherMain] || []),
+    ...(currentPrayer ? prayerThemes[currentPrayer] || [] : []),
+    ...themes
+  ];
+
+  // Get quotes from same context but with different selection
+  const contextualQuotes = getQuotesByTheme(allThemes);
+  
+  // Filter out the current quote
+  const filteredQuotes = currentQuoteText 
+    ? contextualQuotes.filter(q => q.text !== currentQuoteText)
+    : contextualQuotes;
+  
+  if (filteredQuotes.length > 0) {
+    // Use random selection for manual refresh
+    return filteredQuotes[Math.floor(Math.random() * filteredQuotes.length)];
+  }
+  
+  // If no alternatives in same context, get from broader theme
+  const broadThemes = ['creation', 'signs', 'gratitude', 'blessing', 'worship', 'patience'];
+  const broadQuotes = getQuotesByTheme(broadThemes).filter(q => q.text !== currentQuoteText);
+  
+  return broadQuotes.length > 0 
+    ? broadQuotes[Math.floor(Math.random() * broadQuotes.length)]
+    : getRandomQuote();
 };
