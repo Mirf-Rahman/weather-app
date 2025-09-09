@@ -9,6 +9,7 @@ import {
   PRAYER_METHODS
 } from "../api/prayerTimes";
 import { getApproximatePrayerTimes } from "../utils/localPrayerTimes";
+import { debugPrayerTimes } from "../utils/iosDebugger";
 
 export interface PrayerTimesState {
   timings: PrayerTimings | null;
@@ -180,6 +181,8 @@ export function usePrayerTimes(
       // Try local calculation as final fallback
       try {
         console.log('Attempting local prayer times calculation...');
+        debugPrayerTimes.logFallback(errorMessage);
+        
         const localTimes = getApproximatePrayerTimes('your location', lat, lon);
         const nextPrayer = getNextPrayer(localTimes);
         const currentWindow = getCurrentPrayerWindow(localTimes);

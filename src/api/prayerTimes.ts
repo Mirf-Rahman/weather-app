@@ -1,5 +1,6 @@
 import axios from "axios";
 import { isIOSSafari } from "../utils/deviceDetection";
+import { debugPrayerTimes } from "../utils/iosDebugger";
 
 const ALADHAN_BASE_URL = "https://api.aladhan.com/v1";
 
@@ -171,6 +172,16 @@ export async function fetchPrayerTimes(
 
     const url = `${ALADHAN_BASE_URL}/timings/${dateParam}?${params}`;
     
+    // Log the API call attempt
+    debugPrayerTimes.logApiCall(url, { 
+      latitude, 
+      longitude, 
+      date: dateParam, 
+      method, 
+      school,
+      isIOSSafari: isIOSSafari()
+    });
+    
     // iOS Safari specific configuration
     const config = {
       timeout: isIOSSafari() ? 25000 : 15000, // Even longer timeout for iOS Safari
@@ -187,12 +198,16 @@ export async function fetchPrayerTimes(
     const data = await fetchWithFallback(url, config);
 
     if (data.code !== 200) {
-      throw new Error(`Prayer times API error: ${data.status}`);
+      const apiError = new Error(`Prayer times API error: ${data.status}`);
+      debugPrayerTimes.logApiError({ code: data.code, status: data.status });
+      throw apiError;
     }
 
+    debugPrayerTimes.logApiSuccess(data);
     return data;
   } catch (error) {
     console.error('Prayer times fetch error:', error);
+    debugPrayerTimes.logApiError(error);
     
     // More specific error handling for iOS Safari
     if (error instanceof Error) {
