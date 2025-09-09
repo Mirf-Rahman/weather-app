@@ -223,6 +223,19 @@ const NetworkDebugPanel: React.FC<NetworkDebugPanelProps> = ({ latitude, longitu
 
         <div style={{ marginBottom: '30px' }}>
           <h3>📱 Device Information</h3>
+          {deviceInfo.isIOSSafari && (
+            <div style={{
+              backgroundColor: '#FF3B30',
+              color: 'white',
+              padding: '10px 15px',
+              borderRadius: '8px',
+              marginBottom: '15px',
+              fontWeight: 'bold',
+              fontSize: '14px'
+            }}>
+              🚨 iOS Safari Detected - Special handling enabled!
+            </div>
+          )}
           <div style={{
             backgroundColor: 'rgba(255,255,255,0.1)',
             padding: '15px',

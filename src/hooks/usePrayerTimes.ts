@@ -10,6 +10,7 @@ import {
 } from "../api/prayerTimes";
 import { getApproximatePrayerTimes } from "../utils/localPrayerTimes";
 import { debugPrayerTimes } from "../utils/iosDebugger";
+import { isIOSSafari } from "../utils/deviceDetection";
 
 export interface PrayerTimesState {
   timings: PrayerTimings | null;
@@ -67,6 +68,7 @@ export function usePrayerTimes(
   const loadPrayerTimes = useCallback(async (lat: number, lon: number, useCache: boolean = true) => {
     if (!lat || !lon) return;
 
+    console.log('🔄 loadPrayerTimes called with:', { lat, lon, useCache, isIOS: isIOSSafari() });
     setState(prev => ({ ...prev, loading: true, error: null }));
 
     try {
@@ -157,6 +159,13 @@ export function usePrayerTimes(
         throw new Error('Failed to fetch prayer times after multiple attempts');
       }
       
+      console.log('✅ Prayer times response received in hook!', { 
+        hasResponse: !!response, 
+        hasData: !!response?.data, 
+        hasTimings: !!response?.data?.timings,
+        isIOS: isIOSSafari() 
+      });
+      
       // Cache the response
       localStorage.setItem(cacheKey, JSON.stringify(response));
       localStorage.setItem(`${cacheKey}_timestamp`, Date.now().toString());
@@ -165,6 +174,12 @@ export function usePrayerTimes(
       const nextPrayer = getNextPrayer(timings);
       const currentWindow = getCurrentPrayerWindow(timings);
       const hijriDate = `${response.data.date.hijri.day} ${response.data.date.hijri.month.en} ${response.data.date.hijri.year} ${response.data.date.hijri.designation.abbreviated}`;
+
+      console.log('✅ About to update state with prayer times:', { 
+        hasTimings: !!timings, 
+        nextPrayerName: nextPrayer?.name,
+        isIOS: isIOSSafari()
+      });
 
       setState(prev => ({
         ...prev,
@@ -176,19 +191,31 @@ export function usePrayerTimes(
         error: null,
         lastUpdated: Date.now(),
       }));
+      
+      console.log('✅ State updated successfully with prayer times!', { isIOS: isIOSSafari() });
 
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to fetch prayer times';
-      console.error('Error fetching prayer times:', err);
+      console.error('❌ Error fetching prayer times in hook:', { 
+        error: err, 
+        message: errorMessage,
+        isIOS: isIOSSafari()
+      });
+      debugPrayerTimes.logApiError({ hookError: errorMessage, isIOSSafari: isIOSSafari() });
       
       // Try local calculation as final fallback
       try {
-        console.log('Attempting local prayer times calculation...');
+        console.log('🔄 Attempting local prayer times calculation...', { isIOS: isIOSSafari() });
         debugPrayerTimes.logFallback(errorMessage);
         
         const localTimes = getApproximatePrayerTimes('your location', lat, lon);
         const nextPrayer = getNextPrayer(localTimes);
         const currentWindow = getCurrentPrayerWindow(localTimes);
+        
+        console.log('✅ Local times calculated, updating state...', { 
+          hasLocalTimes: !!localTimes,
+          isIOS: isIOSSafari()
+        });
         
         setState(prev => ({
           ...prev,
