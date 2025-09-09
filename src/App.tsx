@@ -17,7 +17,6 @@ import { LocationManager } from "./components/LocationManager";
 import { SettingsPanel } from "./components/SettingsPanel";
 import { alertsManager } from "./utils/alerts";
 import { weatherDB } from "./utils/database";
-import NetworkDebugPanel from "./components/NetworkDebugPanel";
 import "./AppLayout.css";
 import "./styles/enhanced.css";
 import "./styles/theme.css";
@@ -494,12 +493,6 @@ export const App: React.FC = () => {
         onPrayerSchoolChange={handlePrayerSchoolChange}
         prayerNotifications={prayerNotifications}
         onPrayerNotificationsChange={handlePrayerNotificationsChange}
-      />
-      
-      {/* Network Debug Panel - only show in development or when needed */}
-      <NetworkDebugPanel 
-        latitude={current?.coord.lat} 
-        longitude={current?.coord.lon} 
       />
     </div>
   );
