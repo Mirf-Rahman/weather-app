@@ -1,20 +1,30 @@
 import React, { useState } from "react";
 import { usePrayerTimes } from "../hooks/usePrayerTimes";
 import { CurrentWeather } from "../api/weather";
+import { PRAYER_METHODS } from "../api/prayerTimes";
 
 interface PrayerTimesProps {
   current: CurrentWeather;
   theme: "light" | "dark";
+  method?: number;
+  school?: number;
+  notificationsEnabled?: boolean;
 }
 
-const PrayerTimes: React.FC<PrayerTimesProps> = ({ current, theme }) => {
+const PrayerTimes: React.FC<PrayerTimesProps> = ({ 
+  current, 
+  theme,
+  method = 2,
+  school = 0,
+  notificationsEnabled: prayerNotificationsEnabled = false
+}) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   
   const prayerData = usePrayerTimes(
     current.coord.lat,
     current.coord.lon,
-    2, // ISNA method
-    0  // Shafi school
+    method, // Use the method from props
+    school  // Use the school from props
   );
 
   const {
@@ -177,7 +187,9 @@ const PrayerTimes: React.FC<PrayerTimesProps> = ({ current, theme }) => {
 
           <div className="prayer-info-footer">
             <div className="calculation-info">
-              <span className="method-name">Islamic Society of North America (ISNA)</span>
+              <span className="method-name">
+                {PRAYER_METHODS.find(m => m.id === method)?.name || 'Unknown Method'}
+              </span>
               <span className="location-info">📍 {current.name}</span>
             </div>
             <div className="islamic-greeting">
