@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useMemo, useCallback } from "react";
 import { useWeather } from "./hooks/useWeather";
+import { usePrayerTimes } from "./hooks/usePrayerTimes";
 import { SearchBar } from "./components/SearchBar";
 import { CurrentWeatherCard } from "./components/CurrentWeatherCard";
 import { ForecastGrid } from "./components/ForecastGrid";
@@ -7,6 +8,7 @@ import WeatherCharts from "./components/WeatherCharts";
 import AirQuality from "./components/AirQuality";
 import WeatherInsights from "./components/WeatherInsights";
 import PrayerTimes from "./components/PrayerTimes";
+import PrayerWeatherInsights from "./components/PrayerWeatherInsights";
 import { UnitToggle } from "./components/UnitToggle";
 import { ErrorMessage } from "./components/ErrorMessage";
 import { Loader } from "./components/Loader";
@@ -21,6 +23,7 @@ import "./styles/theme.css";
 import "./styles/components.css";
 import "./styles/charts.css";
 import "./styles/prayer-times.css";
+import "./styles/prayer-weather-insights.css";
 
 export const App: React.FC = () => {
   const [units, setUnits] = useState<"metric" | "imperial">("metric");
@@ -35,6 +38,20 @@ export const App: React.FC = () => {
   const [theme, setTheme] = useState<"light" | "dark">(() => {
     return localStorage.getItem("theme") === "light" ? "light" : "dark";
   });
+  
+  // Prayer settings state
+  const [prayerMethod, setPrayerMethod] = useState<number>(() => {
+    const stored = localStorage.getItem("prayerMethod");
+    return stored ? parseInt(stored) : 2; // Default to ISNA
+  });
+  const [prayerSchool, setPrayerSchool] = useState<number>(() => {
+    const stored = localStorage.getItem("prayerSchool");
+    return stored ? parseInt(stored) : 0; // Default to Shafi
+  });
+  const [prayerNotifications, setPrayerNotifications] = useState<boolean>(() => {
+    return localStorage.getItem("prayerNotifications") === "true";
+  });
+  
   const {
     current,
     forecast,
@@ -44,6 +61,14 @@ export const App: React.FC = () => {
     search,
     searchByCoords,
   } = useWeather(units);
+
+  // Prayer times integration
+  const prayerTimesData = usePrayerTimes(
+    current?.coord.lat,
+    current?.coord.lon,
+    prayerMethod,
+    prayerSchool
+  );
 
   useEffect(() => {
     const last = localStorage.getItem("lastCity");
@@ -72,6 +97,32 @@ export const App: React.FC = () => {
   useEffect(() => {
     localStorage.setItem("timeFormat", timeFormat);
   }, [timeFormat]);
+
+  // Effect to store prayer settings
+  useEffect(() => {
+    localStorage.setItem("prayerMethod", prayerMethod.toString());
+  }, [prayerMethod]);
+
+  useEffect(() => {
+    localStorage.setItem("prayerSchool", prayerSchool.toString());
+  }, [prayerSchool]);
+
+  useEffect(() => {
+    localStorage.setItem("prayerNotifications", prayerNotifications.toString());
+  }, [prayerNotifications]);
+
+  // Prayer settings handlers
+  const handlePrayerMethodChange = (method: number) => {
+    setPrayerMethod(method);
+  };
+
+  const handlePrayerSchoolChange = (school: number) => {
+    setPrayerSchool(school);
+  };
+
+  const handlePrayerNotificationsChange = (enabled: boolean) => {
+    setPrayerNotifications(enabled);
+  };
 
   function handleSearch(city: string) {
     search(city);
@@ -364,7 +415,23 @@ export const App: React.FC = () => {
             )}
 
             {current && !loading && (
-              <PrayerTimes current={current} theme={theme} />
+              <PrayerTimes 
+                current={current} 
+                theme={theme}
+                method={prayerMethod}
+                school={prayerSchool}
+                notificationsEnabled={prayerNotifications}
+              />
+            )}
+
+            {current && !loading && prayerTimesData.timings && (
+              <PrayerWeatherInsights
+                current={current}
+                timings={prayerTimesData.timings}
+                nextPrayer={prayerTimesData.nextPrayer}
+                theme={theme}
+                cityName={current?.name || "your location"}
+              />
             )}
 
             {airQuality && !loading && (
@@ -420,6 +487,12 @@ export const App: React.FC = () => {
         onThemeChange={setTheme}
         timeFormat={timeFormat}
         onTimeFormatChange={setTimeFormat}
+        prayerMethod={prayerMethod}
+        onPrayerMethodChange={handlePrayerMethodChange}
+        prayerSchool={prayerSchool}
+        onPrayerSchoolChange={handlePrayerSchoolChange}
+        prayerNotifications={prayerNotifications}
+        onPrayerNotificationsChange={handlePrayerNotificationsChange}
       />
     </div>
   );
