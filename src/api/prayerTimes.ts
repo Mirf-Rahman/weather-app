@@ -170,13 +170,15 @@ export async function fetchPrayerTimes(
     
     // For iOS Safari, use the simplified URL that we know works from debug testing
     if (isIOSSafari()) {
-      console.log('📱 iOS Safari detected - using simplified URL');
+      console.log('📱 iOS Safari detected - using simplified URL with date');
       
-      const url = `${ALADHAN_BASE_URL}/timings?latitude=${latitude}&longitude=${longitude}&method=${method}&school=${school}`;
+      // Use simplified URL format but include the date - this is what works on iOS Safari
+      const url = `${ALADHAN_BASE_URL}/timings/${dateParam}?latitude=${latitude}&longitude=${longitude}&method=${method}&school=${school}`;
       
       debugPrayerTimes.logApiCall(url, { 
         latitude, 
-        longitude, 
+        longitude,
+        date: dateParam, 
         method, 
         school,
         isIOSSafari: true,
