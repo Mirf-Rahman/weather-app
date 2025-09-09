@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { alertsManager, AlertRule } from "../utils/alerts";
 import { weatherDB } from "../utils/database";
+import { PRAYER_METHODS } from "../api/prayerTimes";
 
 interface SettingsProps {
   isOpen: boolean;
@@ -11,6 +12,13 @@ interface SettingsProps {
   onThemeChange: (theme: "light" | "dark") => void;
   timeFormat: "12h" | "24h";
   onTimeFormatChange: (format: "12h" | "24h") => void;
+  // Prayer settings
+  prayerMethod?: number;
+  onPrayerMethodChange?: (method: number) => void;
+  prayerSchool?: number;
+  onPrayerSchoolChange?: (school: number) => void;
+  prayerNotifications?: boolean;
+  onPrayerNotificationsChange?: (enabled: boolean) => void;
 }
 
 export const SettingsPanel: React.FC<SettingsProps> = ({
@@ -22,9 +30,15 @@ export const SettingsPanel: React.FC<SettingsProps> = ({
   onThemeChange,
   timeFormat,
   onTimeFormatChange,
+  prayerMethod = 2,
+  onPrayerMethodChange,
+  prayerSchool = 0,
+  onPrayerSchoolChange,
+  prayerNotifications = false,
+  onPrayerNotificationsChange,
 }) => {
   const [activeTab, setActiveTab] = useState<
-    "general" | "alerts" | "data" | "about"
+    "general" | "prayers" | "alerts" | "data" | "about"
   >("general");
   const [alertRules, setAlertRules] = useState<AlertRule[]>([]);
   const [newRule, setNewRule] = useState<Partial<AlertRule>>({
@@ -226,13 +240,14 @@ export const SettingsPanel: React.FC<SettingsProps> = ({
         </div>
 
         <div className="settings-tabs">
-          {(["general", "alerts", "data", "about"] as const).map((tab) => (
+          {(["general", "prayers", "alerts", "data", "about"] as const).map((tab) => (
             <button
               key={tab}
               className={`tab-btn ${activeTab === tab ? "active" : ""}`}
               onClick={() => setActiveTab(tab)}
             >
               {tab === "general" && "🔧 General"}
+              {tab === "prayers" && "🕌 Prayers"}
               {tab === "alerts" && "🚨 Alerts"}
               {tab === "data" && "💾 Data"}
               {tab === "about" && "ℹ️ About"}
@@ -357,6 +372,89 @@ export const SettingsPanel: React.FC<SettingsProps> = ({
                     </select>
                   </div>
                 )}
+              </div>
+            </div>
+          )}
+
+          {activeTab === "prayers" && (
+            <div className="prayers-settings">
+              <div className="setting-group">
+                <h3>🕌 Prayer Times</h3>
+                <p className="setting-description">
+                  Configure prayer time calculations and notifications
+                </p>
+
+                <div className="setting-item">
+                  <label>Calculation Method</label>
+                  <select
+                    value={prayerMethod}
+                    onChange={(e) => onPrayerMethodChange?.(Number(e.target.value))}
+                    className="prayer-method-select"
+                  >
+                    {PRAYER_METHODS.map((method) => (
+                      <option key={method.id} value={method.id}>
+                        {method.name}
+                      </option>
+                    ))}
+                  </select>
+                  <small className="setting-hint">
+                    {PRAYER_METHODS.find(m => m.id === prayerMethod)?.description}
+                  </small>
+                </div>
+
+                <div className="setting-item">
+                  <label>Jurisprudence School</label>
+                  <div className="radio-group">
+                    <label>
+                      <input
+                        type="radio"
+                        checked={prayerSchool === 0}
+                        onChange={() => onPrayerSchoolChange?.(0)}
+                      />
+                      Shafi (Earlier Asr)
+                    </label>
+                    <label>
+                      <input
+                        type="radio"
+                        checked={prayerSchool === 1}
+                        onChange={() => onPrayerSchoolChange?.(1)}
+                      />
+                      Hanafi (Later Asr)
+                    </label>
+                  </div>
+                  <small className="setting-hint">
+                    Different schools calculate Asr prayer timing differently
+                  </small>
+                </div>
+
+                <div className="setting-item">
+                  <label>
+                    <input
+                      type="checkbox"
+                      checked={prayerNotifications}
+                      onChange={(e) => onPrayerNotificationsChange?.(e.target.checked)}
+                    />
+                    Enable prayer notifications
+                  </label>
+                  <small className="setting-hint">
+                    Receive notifications 15 minutes before each prayer time
+                  </small>
+                </div>
+              </div>
+
+              <div className="setting-group">
+                <h3>🌐 Multiple Locations</h3>
+                <p className="setting-description">
+                  Add favorite locations for prayer times (Coming Soon)
+                </p>
+                <div className="setting-item">
+                  <button className="btn-secondary" disabled>
+                    🏙️ Manage Favorite Cities
+                  </button>
+                  <small className="setting-hint">
+                    Track prayer times for multiple cities simultaneously
+                  </small>
+                </div>
               </div>
             </div>
           )}
