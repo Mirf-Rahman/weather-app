@@ -168,133 +168,43 @@ export async function fetchPrayerTimes(
   try {
     const dateParam = date || formatDate(new Date());
     
-    // For iOS Safari, use the simplified URL that we know works from debug testing
-    if (isIOSSafari()) {
-      console.log('📱 iOS Safari detected - using simplified URL with date');
-      
-      // Use simplified URL format but include the date - this is what works on iOS Safari
-      const url = `${ALADHAN_BASE_URL}/timings/${dateParam}?latitude=${latitude}&longitude=${longitude}&method=${method}&school=${school}`;
-      
-      debugPrayerTimes.logApiCall(url, { 
-        latitude, 
-        longitude,
-        date: dateParam, 
-        method, 
-        school,
-        isIOSSafari: true,
-        simplified: true
-      });
-      
-      console.log(`🔄 iOS Safari - Fetching from simplified URL: ${url}`);
-      
-      const response = await axios.get(url, {
-        timeout: 25000,
-        headers: {
-          'Accept': 'application/json',
-        },
-        withCredentials: false,
-      });
-      
-      const data = response.data;
-      console.log('✅ iOS Safari simplified URL success!', { code: data.code, hasTimings: !!data.data?.timings });
-      
-      if (data.code !== 200) {
-        const apiError = new Error(`Prayer times API error: ${data.status}`);
-        console.error('❌ API returned error code:', data.code, data.status);
-        debugPrayerTimes.logApiError({ code: data.code, status: data.status });
-        throw apiError;
-      }
-      
-      debugPrayerTimes.logApiSuccess(data);
-      return data;
-    }
+    // Use simplified URL that works on both iOS Safari and PC (based on debug testing)
+    // Debug shows simple format works: https://api.aladhan.com/v1/timings?latitude=45.5088&longitude=-73.5878&method=2&school=0
+    // But complex format fails in production: https://api.aladhan.com/v1/timings/09-09-2025?...
+    const url = `${ALADHAN_BASE_URL}/timings?latitude=${latitude}&longitude=${longitude}&method=${method}&school=${school}`;
     
-    // For other browsers, use the complex URL with all parameters
-    // Build URL with parameters for better iOS Safari compatibility
-    const params = new URLSearchParams({
-      latitude: latitude.toFixed(6),
-      longitude: longitude.toFixed(6),
-      method: method.toString(),
-      school: school.toString(),
-      midnightMode: '0',
-      latitudeAdjustmentMethod: '3'
-    });
-
-    const url = `${ALADHAN_BASE_URL}/timings/${dateParam}?${params}`;
-    
-    // Log the API call attempt
     debugPrayerTimes.logApiCall(url, { 
       latitude, 
-      longitude, 
+      longitude,
       date: dateParam, 
       method, 
       school,
-      isIOSSafari: isIOSSafari()
+      isIOSSafari: isIOSSafari(),
+      simplified: true,
+      reason: 'Using simple URL that works on both iOS and PC'
     });
     
-    // iOS Safari specific configuration
-    const config = {
-      timeout: isIOSSafari() ? 25000 : 15000, // Even longer timeout for iOS Safari
+    console.log(`🔄 Fetching prayer times from simplified URL: ${url}`);
+    
+    // Use axios directly since debug shows it works on both platforms with simple URL
+    const response = await axios.get(url, {
+      timeout: 25000,
       headers: {
         'Accept': 'application/json',
-        'Content-Type': 'application/json',
-        'Cache-Control': 'no-cache',
       },
-      validateStatus: (status: number) => status >= 200 && status < 300,
-      withCredentials: false, // Important for CORS on iOS Safari
-    };
-
-    console.log(`🔄 Fetching prayer times from: ${url}`);
-    
-    // For iOS Safari, use axios directly since debug shows it works perfectly
-    if (isIOSSafari()) {
-      console.log('📱 iOS Safari detected - using axios directly');
-      const response = await axios.get(url, {
-        timeout: 25000,
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json',
-          'Cache-Control': 'no-cache',
-        },
-        validateStatus: (status: number) => status >= 200 && status < 300,
-        withCredentials: false,
-      });
-      
-      const data = response.data;
-      console.log('✅ iOS Safari axios success!', { code: data.code, hasTimings: !!data.data?.timings });
-      
-      if (data.code !== 200) {
-        const apiError = new Error(`Prayer times API error: ${data.status}`);
-        console.error('❌ API returned error code:', data.code, data.status);
-        debugPrayerTimes.logApiError({ code: data.code, status: data.status });
-        throw apiError;
-      }
-      
-      debugPrayerTimes.logApiSuccess(data);
-      return data;
-    }
-    
-    // For other browsers, use the fallback system
-    const data = await fetchWithFallback(url, config);
-
-    console.log('🔍 Got data from fetchWithFallback:', { 
-      hasData: !!data, 
-      code: data?.code, 
-      status: data?.status,
-      hasTimings: !!data?.data?.timings 
+      withCredentials: false,
     });
-
+    
+    const data = response.data;
+    console.log('✅ Simplified URL success!', { code: data.code, hasTimings: !!data.data?.timings });
+    
     if (data.code !== 200) {
       const apiError = new Error(`Prayer times API error: ${data.status}`);
       console.error('❌ API returned error code:', data.code, data.status);
       debugPrayerTimes.logApiError({ code: data.code, status: data.status });
       throw apiError;
     }
-
-    console.log('✅ Prayer times fetch successful!', { 
-      code: data.code, 
-      timingsKeys: Object.keys(data.data?.timings || {})
-    });
+    
     debugPrayerTimes.logApiSuccess(data);
     return data;
   } catch (error) {
