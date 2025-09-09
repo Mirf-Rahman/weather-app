@@ -4,7 +4,7 @@ import { PrayerTimings } from "../api/prayerTimes";
 
 interface PrayerWeatherInsightsProps {
   current: CurrentWeather;
-  timings: PrayerTimings;
+  timings: PrayerTimings | null;
   nextPrayer: { name: string; time: string; timeUntil: number } | null;
   theme: "light" | "dark";
   cityName?: string;
@@ -72,24 +72,6 @@ const PrayerWeatherInsights: React.FC<PrayerWeatherInsightsProps> = ({
   cityName = "your location",
 }) => {
   
-  // Get daily quote based on date (consistent throughout the day)
-  const dailyQuote = useMemo(() => {
-    const today = new Date();
-    const dayOfYear = Math.floor((today.getTime() - new Date(today.getFullYear(), 0, 0).getTime()) / 1000 / 60 / 60 / 24);
-    return ISLAMIC_QUOTES[dayOfYear % ISLAMIC_QUOTES.length];
-  }, []);
-
-  // Format time until next prayer with proper hours and minutes
-  const formatTimeUntil = (minutes: number): string => {
-    const hours = Math.floor(minutes / 60);
-    const remainingMinutes = minutes % 60;
-    
-    if (hours > 0) {
-      return `${hours} hour${hours > 1 ? 's' : ''} and ${remainingMinutes} minute${remainingMinutes !== 1 ? 's' : ''}`;
-    }
-    return `${remainingMinutes} minute${remainingMinutes !== 1 ? 's' : ''}`;
-  };
-
   // Get weather emoji based on condition
   const getWeatherEmoji = (weatherCode: string, isDay: boolean = true): string => {
     const weatherEmojis: { [key: string]: string } = {
@@ -104,6 +86,95 @@ const PrayerWeatherInsights: React.FC<PrayerWeatherInsightsProps> = ({
       '50d': '🌫️', '50n': '🌫️'
     };
     return weatherEmojis[weatherCode] || '🌤️';
+  };
+
+  // Get daily quote based on date (consistent throughout the day)
+  const dailyQuote = useMemo(() => {
+    const today = new Date();
+    const dayOfYear = Math.floor((today.getTime() - new Date(today.getFullYear(), 0, 0).getTime()) / 1000 / 60 / 60 / 24);
+    return ISLAMIC_QUOTES[dayOfYear % ISLAMIC_QUOTES.length];
+  }, []);
+
+  // If prayer times failed to load, show weather-only guidance
+  if (!timings) {
+    return (
+      <div className={`prayer-weather-insights ${theme}`}>
+        <div className="insights-header">
+          <div className="prayer-title">
+            <h3>
+              <span className="title-icon">🕌</span>
+              Weather Guidance
+              <span className="location-badge">{cityName}</span>
+            </h3>
+          </div>
+          <div className="bismillah" data-tooltip="In the name of Allah, the Most Gracious, the Most Merciful">
+            ✨ Islamic wisdom meets weather wisdom • الحكمة الإسلامية
+          </div>
+        </div>
+
+        <div className="weather-summary-banner" data-weather={current.weather[0].main.toLowerCase()}>
+          <div className="weather-info">
+            <div className="weather-icon-large">
+              {getWeatherEmoji(current.weather[0].icon)}
+            </div>
+            <div className="weather-details">
+              <span className="weather-label">Current Conditions</span>
+              <div className="weather-value">
+                <span className="temp-value">{Math.round(current.main.temp)}°C</span>
+                <span className="condition-text">
+                  {current.weather[0].description.charAt(0).toUpperCase() + 
+                   current.weather[0].description.slice(1)}
+                </span>
+              </div>
+              <div className="weather-meta">
+                <span className="humidity">💧 {current.main.humidity}%</span>
+                <span className="wind">🌬️ {Math.round(current.wind.speed)} km/h</span>
+              </div>
+            </div>
+          </div>
+          
+          <div className="prayer-info">
+            <div className="prayer-icon">🕐</div>
+            <div className="prayer-details">
+              <span className="prayer-label">Prayer Times</span>
+              <div className="prayer-value">
+                <span className="prayer-name">Loading...</span>
+                <span className="prayer-time">Please check connection</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Enhanced Daily Islamic Quote */}
+        <div className="daily-quote interactive-card">
+          <div className="quote-header">
+            <span className="quote-icon">📖</span>
+            <h4>Daily Reflection</h4>
+            <span className="quote-badge">Quran & Sunnah</span>
+          </div>
+          <div className="quote-content">
+            <div className="quote-text">
+              <p>"{dailyQuote.text}"</p>
+            </div>
+            <div className="quote-source">
+              <span className="source-icon">✨</span>
+              <cite>— {dailyQuote.source}</cite>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Format time until next prayer with proper hours and minutes
+  const formatTimeUntil = (minutes: number): string => {
+    const hours = Math.floor(minutes / 60);
+    const remainingMinutes = minutes % 60;
+    
+    if (hours > 0) {
+      return `${hours} hour${hours > 1 ? 's' : ''} and ${remainingMinutes} minute${remainingMinutes !== 1 ? 's' : ''}`;
+    }
+    return `${remainingMinutes} minute${remainingMinutes !== 1 ? 's' : ''}`;
   };
 
   // Weather-Prayer correlations with enhanced insights
