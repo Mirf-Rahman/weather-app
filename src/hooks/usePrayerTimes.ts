@@ -103,8 +103,54 @@ export function usePrayerTimes(
         }
       }
 
-      // Fetch fresh data
-      const response = await fetchPrayerTimes(lat, lon, undefined, method, school);
+      // Fetch fresh data with retry mechanism for iOS Safari
+      let response: PrayerTimesResponse | null = null;
+      let lastError: Error | null = null;
+      
+      for (let attempt = 1; attempt <= 3; attempt++) {
+        try {
+          console.log(`Fetching prayer times (attempt ${attempt}/3):`, { lat, lon, method, school });
+          response = await fetchPrayerTimes(lat, lon, undefined, method, school);
+          break;
+        } catch (error) {
+          lastError = error as Error;
+          console.warn(`Prayer times fetch attempt ${attempt} failed:`, error);
+          
+          // If it's a network error and we have cached data, use it
+          if (cachedData && (error as Error).message.includes('Network')) {
+            console.log('Using cached data due to network error');
+            const timings = cachedData.data.timings;
+            const nextPrayer = getNextPrayer(timings);
+            const currentWindow = getCurrentPrayerWindow(timings);
+            const hijriDate = `${cachedData.data.date.hijri.day} ${cachedData.data.date.hijri.month.en} ${cachedData.data.date.hijri.year} ${cachedData.data.date.hijri.designation.abbreviated}`;
+
+            setState(prev => ({
+              ...prev,
+              timings,
+              hijriDate,
+              nextPrayer,
+              currentPrayerWindow: currentWindow,
+              loading: false,
+              error: 'Using cached data (offline)',
+              lastUpdated: Date.now(),
+            }));
+            return;
+          }
+          
+          // Wait before retry (exponential backoff)
+          if (attempt < 3) {
+            await new Promise(resolve => setTimeout(resolve, attempt * 1000));
+          }
+        }
+      }
+      
+      if (!response && lastError) {
+        throw lastError;
+      }
+
+      if (!response) {
+        throw new Error('Failed to fetch prayer times after multiple attempts');
+      }
       
       // Cache the response
       localStorage.setItem(cacheKey, JSON.stringify(response));
