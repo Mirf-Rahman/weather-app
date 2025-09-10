@@ -38,7 +38,7 @@ export const App: React.FC = () => {
   const [theme, setTheme] = useState<"light" | "dark">(() => {
     return localStorage.getItem("theme") === "light" ? "light" : "dark";
   });
-  
+
   // Prayer settings state
   const [prayerMethod, setPrayerMethod] = useState<number>(() => {
     const stored = localStorage.getItem("prayerMethod");
@@ -48,10 +48,12 @@ export const App: React.FC = () => {
     const stored = localStorage.getItem("prayerSchool");
     return stored ? parseInt(stored) : 0; // Default to Shafi
   });
-  const [prayerNotifications, setPrayerNotifications] = useState<boolean>(() => {
-    return localStorage.getItem("prayerNotifications") === "true";
-  });
-  
+  const [prayerNotifications, setPrayerNotifications] = useState<boolean>(
+    () => {
+      return localStorage.getItem("prayerNotifications") === "true";
+    }
+  );
+
   const {
     current,
     forecast,
@@ -415,8 +417,8 @@ export const App: React.FC = () => {
             )}
 
             {current && !loading && (
-              <PrayerTimes 
-                current={current} 
+              <PrayerTimes
+                current={current}
                 theme={theme}
                 method={prayerMethod}
                 school={prayerSchool}

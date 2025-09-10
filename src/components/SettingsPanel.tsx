@@ -240,19 +240,21 @@ export const SettingsPanel: React.FC<SettingsProps> = ({
         </div>
 
         <div className="settings-tabs">
-          {(["general", "prayers", "alerts", "data", "about"] as const).map((tab) => (
-            <button
-              key={tab}
-              className={`tab-btn ${activeTab === tab ? "active" : ""}`}
-              onClick={() => setActiveTab(tab)}
-            >
-              {tab === "general" && "🔧 General"}
-              {tab === "prayers" && "🕌 Prayers"}
-              {tab === "alerts" && "🚨 Alerts"}
-              {tab === "data" && "💾 Data"}
-              {tab === "about" && "ℹ️ About"}
-            </button>
-          ))}
+          {(["general", "prayers", "alerts", "data", "about"] as const).map(
+            (tab) => (
+              <button
+                key={tab}
+                className={`tab-btn ${activeTab === tab ? "active" : ""}`}
+                onClick={() => setActiveTab(tab)}
+              >
+                {tab === "general" && "🔧 General"}
+                {tab === "prayers" && "🕌 Prayers"}
+                {tab === "alerts" && "🚨 Alerts"}
+                {tab === "data" && "💾 Data"}
+                {tab === "about" && "ℹ️ About"}
+              </button>
+            )
+          )}
         </div>
 
         <div className="settings-content">
@@ -388,7 +390,9 @@ export const SettingsPanel: React.FC<SettingsProps> = ({
                   <label>Calculation Method</label>
                   <select
                     value={prayerMethod}
-                    onChange={(e) => onPrayerMethodChange?.(Number(e.target.value))}
+                    onChange={(e) =>
+                      onPrayerMethodChange?.(Number(e.target.value))
+                    }
                     className="prayer-method-select"
                   >
                     {PRAYER_METHODS.map((method) => (
@@ -398,7 +402,10 @@ export const SettingsPanel: React.FC<SettingsProps> = ({
                     ))}
                   </select>
                   <small className="setting-hint">
-                    {PRAYER_METHODS.find(m => m.id === prayerMethod)?.description}
+                    {
+                      PRAYER_METHODS.find((m) => m.id === prayerMethod)
+                        ?.description
+                    }
                   </small>
                 </div>
 
@@ -432,7 +439,9 @@ export const SettingsPanel: React.FC<SettingsProps> = ({
                     <input
                       type="checkbox"
                       checked={prayerNotifications}
-                      onChange={(e) => onPrayerNotificationsChange?.(e.target.checked)}
+                      onChange={(e) =>
+                        onPrayerNotificationsChange?.(e.target.checked)
+                      }
                     />
                     Enable prayer notifications
                   </label>

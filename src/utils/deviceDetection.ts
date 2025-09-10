@@ -1,17 +1,23 @@
 // Device detection utilities
 
 export const isIOS = (): boolean => {
-  if (typeof window === 'undefined') return false;
-  
-  return /iPad|iPhone|iPod/.test(navigator.userAgent) ||
-    (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  if (typeof window === "undefined") return false;
+
+  return (
+    /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+    (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1)
+  );
 };
 
 export const isSafari = (): boolean => {
-  if (typeof window === 'undefined') return false;
-  
+  if (typeof window === "undefined") return false;
+
   const userAgent = navigator.userAgent.toLowerCase();
-  return userAgent.includes('safari') && !userAgent.includes('chrome') && !userAgent.includes('firefox');
+  return (
+    userAgent.includes("safari") &&
+    !userAgent.includes("chrome") &&
+    !userAgent.includes("firefox")
+  );
 };
 
 export const isIOSSafari = (): boolean => {
@@ -19,11 +25,11 @@ export const isIOSSafari = (): boolean => {
 };
 
 export const getUserAgent = (): string => {
-  if (typeof window === 'undefined') return 'Server';
-  
+  if (typeof window === "undefined") return "Server";
+
   if (isIOSSafari()) {
-    return 'WeatherApp/1.0 (iOS Safari)';
+    return "WeatherApp/1.0 (iOS Safari)";
   }
-  
-  return 'WeatherApp/1.0';
+
+  return "WeatherApp/1.0";
 };
