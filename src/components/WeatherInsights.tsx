@@ -31,10 +31,11 @@ const WeatherInsights: React.FC<WeatherInsightsProps> = ({
   const todayForecast = forecast.list.filter((item) =>
     item.dt_txt.startsWith(today)
   );
-  
+
   // Fallback to current day's forecast if filtered list is empty
-  const validForecast = todayForecast.length > 0 ? todayForecast : forecast.list.slice(0, 8);
-  
+  const validForecast =
+    todayForecast.length > 0 ? todayForecast : forecast.list.slice(0, 8);
+
   const todayMax = Math.max(
     current.main.temp_max,
     ...validForecast.map((item) => item.main.temp_max)
