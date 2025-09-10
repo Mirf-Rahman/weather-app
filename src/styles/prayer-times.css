@@ -6,15 +6,15 @@
   border-radius: 20px;
   padding: 1.75rem;
   margin: 1.5rem 0;
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35), 
-              inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
   position: relative;
   overflow: hidden;
   transition: all 0.3s ease;
 }
 
 .prayer-times-card::before {
-  content: '';
+  content: "";
   position: absolute;
   top: 0;
   left: 0;
@@ -29,8 +29,8 @@
   background: rgba(255, 255, 255, 0.9);
   border: 1px solid rgba(203, 213, 225, 0.8);
   color: #1e293b;
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12), 
-              inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
 }
 
 .prayer-times-card.light::before {
@@ -75,7 +75,7 @@
   font-size: 0.85rem;
   color: #16a085;
   font-weight: 500;
-  font-family: 'Amiri', 'Arabic Typesetting', serif;
+  font-family: "Amiri", "Arabic Typesetting", serif;
   letter-spacing: 0.5px;
 }
 
@@ -159,12 +159,16 @@
   font-size: 0.9rem;
   color: #16a085;
   font-weight: 500;
-  font-family: 'Amiri', 'Arabic Typesetting', serif;
+  font-family: "Amiri", "Arabic Typesetting", serif;
 }
 
 /* Next Prayer Banner */
 .next-prayer-banner {
-  background: linear-gradient(135deg, rgba(22, 160, 133, 0.15), rgba(39, 174, 96, 0.1));
+  background: linear-gradient(
+    135deg,
+    rgba(22, 160, 133, 0.15),
+    rgba(39, 174, 96, 0.1)
+  );
   border: 1px solid rgba(22, 160, 133, 0.3);
   border-radius: 16px;
   padding: 1rem;
@@ -177,7 +181,7 @@
 }
 
 .next-prayer-banner::before {
-  content: '';
+  content: "";
   position: absolute;
   top: 0;
   left: 0;
@@ -295,8 +299,13 @@
 }
 
 @keyframes prayerPulse {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0.4); }
-  50% { box-shadow: 0 0 0 4px rgba(231, 76, 60, 0.1); }
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(231, 76, 60, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 4px rgba(231, 76, 60, 0.1);
+  }
 }
 
 .prayer-name-section {
@@ -330,7 +339,7 @@
 .prayer-name-ar {
   font-size: 0.85rem;
   color: #94a3b8;
-  font-family: 'Amiri', 'Arabic Typesetting', serif;
+  font-family: "Amiri", "Arabic Typesetting", serif;
   font-weight: 500;
   direction: rtl;
 }
@@ -360,8 +369,13 @@
 }
 
 @keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
 }
 
 /* Footer Section */
@@ -408,7 +422,7 @@
 .greeting {
   font-size: 0.9rem;
   color: #16a085;
-  font-family: 'Amiri', 'Arabic Typesetting', serif;
+  font-family: "Amiri", "Arabic Typesetting", serif;
   font-weight: 500;
 }
 
@@ -432,7 +446,9 @@
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* Error State */
