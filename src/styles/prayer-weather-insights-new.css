@@ -1,0 +1,407 @@
+/* Prayer & Weather Guidance - Perfect Match with Prayer Times Design */
+.prayer-weather-insights {
+  background: rgba(30, 41, 59, 0.85);
+  backdrop-filter: blur(18px);
+  border: 1px solid #334155;
+  border-radius: 20px;
+  padding: 1.75rem;
+  margin: 1.5rem 0;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  color: #f1f5f9;
+}
+
+.prayer-weather-insights::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #16a085, #27ae60, #2ecc71);
+  border-radius: 20px 20px 0 0;
+}
+
+/* Light theme styles */
+.prayer-weather-insights.light {
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(203, 213, 225, 0.8);
+  color: #1e293b;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+.prayer-weather-insights.light::before {
+  background: linear-gradient(90deg, #16a085, #27ae60, #2ecc71);
+}
+
+/* Header Section - Matching Prayer Times Header */
+.insights-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.25rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid rgba(51, 65, 85, 0.3);
+}
+
+.prayer-weather-insights.light .insights-header {
+  border-bottom: 1px solid rgba(203, 213, 225, 0.4);
+}
+
+.prayer-title h3 {
+  font-size: 1.4rem;
+  font-weight: 600;
+  margin: 0 0 0.25rem 0;
+  color: #f1f5f9;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.prayer-weather-insights.light .prayer-title h3 {
+  color: #1e293b;
+}
+
+.bismillah {
+  font-size: 0.85rem;
+  color: #16a085;
+  font-weight: 500;
+  font-family: "Amiri", "Arabic Typesetting", serif;
+  letter-spacing: 0.5px;
+}
+
+/* Weather Summary Banner - Like Next Prayer Banner */
+.weather-summary-banner {
+  background: linear-gradient(
+    135deg,
+    rgba(22, 160, 133, 0.15),
+    rgba(39, 174, 96, 0.1)
+  );
+  border: 1px solid rgba(22, 160, 133, 0.3);
+  border-radius: 16px;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.weather-summary-banner::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 100%;
+  background: #16a085;
+  border-radius: 0 2px 2px 0;
+}
+
+.prayer-weather-insights.light .weather-summary-banner {
+  background: linear-gradient(
+    135deg,
+    rgba(22, 160, 133, 0.1),
+    rgba(39, 174, 96, 0.06)
+  );
+  border-color: rgba(22, 160, 133, 0.2);
+}
+
+.weather-info .weather-label {
+  font-size: 0.75rem;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  display: block;
+  margin-bottom: 0.25rem;
+}
+
+.prayer-weather-insights.light .weather-info .weather-label {
+  color: #64748b;
+}
+
+.weather-info .weather-value {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #16a085;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.weather-description {
+  font-size: 0.9rem;
+  color: #cbd5e1;
+  text-align: center;
+  margin-top: 0.5rem;
+  font-style: italic;
+}
+
+.prayer-weather-insights.light .weather-description {
+  color: #475569;
+}
+
+/* Prayer Insights Grid - Like Prayer Times Grid */
+.insights-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.25rem;
+  margin-bottom: 1.5rem;
+}
+
+.insight-card {
+  background: rgba(51, 65, 85, 0.3);
+  border: 1px solid rgba(100, 116, 139, 0.2);
+  border-radius: 16px;
+  padding: 1.5rem;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.insight-card:hover {
+  transform: translateY(-2px);
+  background: rgba(51, 65, 85, 0.4);
+  border-color: rgba(22, 160, 133, 0.3);
+}
+
+.prayer-weather-insights.light .insight-card {
+  background: rgba(248, 250, 252, 0.7);
+  border-color: rgba(203, 213, 225, 0.3);
+}
+
+.prayer-weather-insights.light .insight-card:hover {
+  background: rgba(248, 250, 252, 0.9);
+}
+
+.insight-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.insight-icon {
+  font-size: 2rem;
+  background: rgba(22, 160, 133, 0.2);
+  padding: 1rem;
+  border-radius: 12px;
+  border: 1px solid rgba(22, 160, 133, 0.3);
+  backdrop-filter: blur(8px);
+  transition: all 0.3s ease;
+}
+
+.insight-icon:hover {
+  transform: scale(1.05);
+  background: rgba(22, 160, 133, 0.3);
+}
+
+.insight-content h4 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin: 0 0 0.5rem 0;
+  color: #f1f5f9;
+}
+
+.prayer-weather-insights.light .insight-content h4 {
+  color: #1e293b;
+}
+
+.insight-content p {
+  font-size: 0.95rem;
+  color: #cbd5e1;
+  line-height: 1.7;
+  margin: 0;
+}
+
+.prayer-weather-insights.light .insight-content p {
+  color: #475569;
+}
+
+/* Overall Summary Section - Like Hijri Date Section */
+.insights-summary {
+  background: rgba(22, 160, 133, 0.1);
+  border: 1px solid rgba(22, 160, 133, 0.2);
+  border-radius: 12px;
+  padding: 0.75rem;
+  text-align: center;
+  margin-bottom: 1rem;
+}
+
+.prayer-weather-insights.light .insights-summary {
+  background: rgba(22, 160, 133, 0.05);
+  border-color: rgba(22, 160, 133, 0.15);
+}
+
+.summary-content h4 {
+  font-size: 0.9rem;
+  color: #16a085;
+  font-weight: 500;
+  font-family: "Amiri", "Arabic Typesetting", serif;
+  margin: 0;
+}
+
+.prayer-weather-insights.light .summary-content h4 {
+  color: #0f766e;
+}
+
+.summary-content p {
+  font-size: 0.85rem;
+  color: #cbd5e1;
+  line-height: 1.5;
+  margin: 0.25rem 0 0 0;
+}
+
+.prayer-weather-insights.light .summary-content p {
+  color: #475569;
+}
+
+/* Daily Islamic Quote - Like Hijri Date Design */
+.daily-quote {
+  background: rgba(22, 160, 133, 0.1);
+  border: 1px solid rgba(22, 160, 133, 0.2);
+  border-radius: 12px;
+  padding: 0.75rem;
+  text-align: center;
+}
+
+.prayer-weather-insights.light .daily-quote {
+  background: rgba(22, 160, 133, 0.05);
+  border-color: rgba(22, 160, 133, 0.15);
+}
+
+.quote-text {
+  font-size: 0.9rem;
+  color: #16a085;
+  font-weight: 500;
+  font-family: "Amiri", "Arabic Typesetting", serif;
+  margin: 0;
+}
+
+.prayer-weather-insights.light .quote-text {
+  color: #0f766e;
+}
+
+.quote-text h4 {
+  font-size: 0.9rem;
+  color: #16a085;
+  font-weight: 500;
+  font-family: "Amiri", "Arabic Typesetting", serif;
+  margin: 0 0 0.5rem 0;
+}
+
+.prayer-weather-insights.light .quote-text h4 {
+  color: #0f766e;
+}
+
+.quote-text p {
+  margin: 0 0 0.5rem 0;
+  color: #cbd5e1;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  font-style: italic;
+  font-weight: 400;
+}
+
+.prayer-weather-insights.light .quote-text p {
+  color: #475569;
+}
+
+.quote-text cite {
+  color: #16a085;
+  font-size: 0.8rem;
+  font-weight: 500;
+  font-style: normal;
+  font-family: "Amiri", "Arabic Typesetting", serif;
+  letter-spacing: 0.3px;
+  display: block;
+  border-top: 1px solid rgba(22, 160, 133, 0.2);
+  padding-top: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.prayer-weather-insights.light .quote-text cite {
+  color: #0f766e;
+  border-top-color: rgba(22, 160, 133, 0.15);
+}
+
+/* Responsive Design - Matching Prayer Times */
+@media (max-width: 768px) {
+  .prayer-weather-insights {
+    padding: 1.5rem;
+    margin: 1rem 0;
+  }
+
+  .prayer-title h3 {
+    font-size: 1.25rem;
+  }
+
+  .insights-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .insight-card {
+    padding: 1.25rem;
+  }
+
+  .insight-icon {
+    font-size: 1.8rem;
+    padding: 0.75rem;
+  }
+
+  .insights-summary {
+    padding: 0.75rem;
+  }
+
+  .daily-quote {
+    padding: 0.75rem;
+  }
+
+  .weather-summary-banner {
+    flex-direction: column;
+    gap: 0.5rem;
+    text-align: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .prayer-weather-insights {
+    padding: 1rem;
+  }
+
+  .prayer-title h3 {
+    font-size: 1.1rem;
+  }
+
+  .insight-card {
+    padding: 1rem;
+  }
+
+  .insight-icon {
+    font-size: 1.6rem;
+    padding: 0.6rem;
+  }
+
+  .insights-summary {
+    padding: 0.75rem;
+  }
+
+  .daily-quote {
+    padding: 0.75rem;
+  }
+}
+
+/* Hover Effects - Matching Prayer Times Elegance */
+.prayer-weather-insights:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 16px 50px rgba(0, 0, 0, 0.4);
+}
+
+.prayer-weather-insights.light:hover {
+  box-shadow: 0 16px 50px rgba(0, 0, 0, 0.15);
+}
