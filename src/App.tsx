@@ -390,7 +390,7 @@ export const App: React.FC = () => {
               />
             )}
             {forecast && !loading && (
-              <h3 className="forecast-title">7-Day Forecast</h3>
+              <h3 className="forecast-title">5-Day Forecast</h3>
             )}
             {forecast && !loading && (
               <ForecastGrid

@@ -148,6 +148,17 @@ body {
   color: white;
 }
 
+/* Analytics toggle pop animation */
+.icon-btn[title="Toggle analytics"]:active {
+  animation: analyticsPop 280ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+@keyframes analyticsPop {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.15); }
+  100% { transform: scale(1); }
+}
+
 /* Light mode specific overrides */
 [data-theme="light"] .icon-btn {
   background: rgba(255, 255, 255, 0.9);

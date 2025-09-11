@@ -9,6 +9,14 @@
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
 }
 
+/* Light mode overrides for Analytics */
+[data-theme="light"] .analytics-container {
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid #d1d5db;
+  color: #1e293b;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+}
+
 .analytics-header {
   display: flex;
   /* LocationManager Styles */
@@ -473,6 +481,18 @@
   font-size: 0.9rem;
 }
 
+[data-theme="light"] .period-btn {
+  border-color: #d1d5db;
+  background: rgba(255, 255, 255, 0.9);
+  color: #334155;
+}
+
+[data-theme="light"] .period-btn.active {
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  color: #fff;
+  border-color: #2563eb;
+}
+
 .period-btn:hover {
   background: rgba(59, 130, 246, 0.2);
   border-color: #3b82f6;
@@ -497,6 +517,11 @@
   padding: 1.25rem;
   border: 1px solid rgba(255, 255, 255, 0.1);
   transition: all 0.3s ease;
+}
+
+[data-theme="light"] .stat-card {
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid #e5e7eb;
 }
 
 .stat-card:hover {
@@ -526,6 +551,10 @@
   font-weight: 600;
   color: #f1f5f9;
   margin-bottom: 0.5rem;
+}
+
+[data-theme="light"] .stat-value {
+  color: #0f172a;
 }
 
 .stat-subtitle {
@@ -636,6 +665,13 @@
   border-radius: 8px;
 }
 
+[data-theme="light"] .simple-chart,
+[data-theme="light"] .dual-chart,
+[data-theme="light"] .hourly-breakdown {
+  background: rgba(241, 245, 249, 0.8);
+  border: 1px solid #e5e7eb;
+}
+
 .chart-point {
   display: flex;
   flex-direction: column;
@@ -717,6 +753,11 @@
   border-radius: 8px;
   background: rgba(255, 255, 255, 0.05);
   transition: all 0.3s ease;
+}
+
+[data-theme="light"] .hourly-item {
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid #e5e7eb;
 }
 
 .hourly-item:hover {
