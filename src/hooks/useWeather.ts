@@ -8,11 +8,14 @@ import {
   fetchCurrentByCoords,
   fetchForecastByCoords,
   fetchAirQuality,
+  OneCallResponse,
+  fetchDailyByCoords,
 } from "../api/weather";
 
 export function useWeather(units: "metric" | "imperial") {
   const [current, setCurrent] = useState<CurrentWeather | null>(null);
   const [forecast, setForecast] = useState<ForecastResponse | null>(null);
+  const [daily, setDaily] = useState<OneCallResponse | null>(null);
   const [airQuality, setAirQuality] = useState<AirQualityData | null>(null);
   const [city, setCity] = useState<string>("");
   const [lastCoords, setLastCoords] = useState<{
@@ -38,12 +41,18 @@ export function useWeather(units: "metric" | "imperial") {
           fetchForecastByCity(q, units),
         ]);
 
-        // Fetch air quality data using coordinates
+        // Fetch air quality + daily forecast using coordinates
         let aq: AirQualityData | null = null;
+        let dly: OneCallResponse | null = null;
         try {
           aq = await fetchAirQuality(c.coord.lat, c.coord.lon);
         } catch (e) {
           console.warn("Air quality data unavailable:", e);
+        }
+        try {
+          dly = await fetchDailyByCoords(c.coord.lat, c.coord.lon, units);
+        } catch (e) {
+          console.warn("Daily forecast unavailable:", e);
         }
 
         // Update cache with the fresh data
@@ -55,6 +64,7 @@ export function useWeather(units: "metric" | "imperial") {
 
         setCurrent(c);
         setForecast(f);
+        setDaily(dly);
         setAirQuality(aq);
         setCity(q);
         setLastCoords(null); // Clear coords when searching by city
@@ -81,16 +91,23 @@ export function useWeather(units: "metric" | "imperial") {
           fetchForecastByCoords(lat, lon, units),
         ]);
 
-        // Fetch air quality data
+        // Fetch air quality data + daily forecast
         let aq: AirQualityData | null = null;
+        let dly: OneCallResponse | null = null;
         try {
           aq = await fetchAirQuality(lat, lon);
         } catch (e) {
           console.warn("Air quality data unavailable:", e);
         }
+        try {
+          dly = await fetchDailyByCoords(lat, lon, units);
+        } catch (e) {
+          console.warn("Daily forecast unavailable:", e);
+        }
 
         setCurrent(c);
         setForecast(f);
+        setDaily(dly);
         setAirQuality(aq);
         setCity(c.name);
         setLastCoords({ lat, lon }); // Store coords for unit changes
@@ -139,6 +156,7 @@ export function useWeather(units: "metric" | "imperial") {
   return {
     current,
     forecast,
+    daily,
     airQuality,
     city,
     loading,

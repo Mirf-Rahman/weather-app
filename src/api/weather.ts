@@ -52,6 +52,27 @@ export interface ForecastResponse {
   list: ForecastListItem[];
 }
 
+// One Call Daily (7-day) types
+export interface OneCallDaily {
+  dt: number;
+  sunrise: number;
+  sunset: number;
+  temp: { day: number; min: number; max: number; night: number; eve: number; morn: number };
+  feels_like: { day: number; night: number; eve: number; morn: number };
+  pressure: number;
+  humidity: number;
+  wind_speed: number;
+  weather: { id: number; main: string; description: string; icon: string }[];
+  clouds: number;
+  pop: number; // probability of precipitation
+  uvi: number;
+}
+
+export interface OneCallResponse {
+  timezone_offset: number;
+  daily: OneCallDaily[];
+}
+
 export interface GeocodeResult {
   name: string;
   local_names?: Record<string, string>;
@@ -150,6 +171,29 @@ export async function fetchForecastByCoords(
       _t: timestamp, // Cache-busting parameter
     },
   });
+  return data;
+}
+
+// 7-day daily forecast via One Call API
+export async function fetchDailyByCoords(
+  lat: number,
+  lon: number,
+  units: "metric" | "imperial" = "metric"
+): Promise<OneCallResponse> {
+  const timestamp = Date.now();
+  const { data } = await axios.get<OneCallResponse>(
+    `https://api.openweathermap.org/data/2.5/onecall`,
+    {
+      params: {
+        lat,
+        lon,
+        units,
+        exclude: "current,minutely,hourly,alerts",
+        appid: import.meta.env.VITE_OPENWEATHER_API_KEY,
+        _t: timestamp,
+      },
+    }
+  );
   return data;
 }
 

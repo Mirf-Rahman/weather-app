@@ -57,6 +57,7 @@ export const App: React.FC = () => {
   const {
     current,
     forecast,
+    daily,
     airQuality,
     loading,
     error,
@@ -389,13 +390,14 @@ export const App: React.FC = () => {
               />
             )}
             {forecast && !loading && (
-              <h3 className="forecast-title">5-Day Forecast</h3>
+              <h3 className="forecast-title">{daily ? "7-Day Forecast" : "5-Day Forecast"}</h3>
             )}
             {forecast && !loading && (
               <ForecastGrid
                 data={forecast}
                 units={units}
                 timeFormat={timeFormat}
+                daily={daily}
               />
             )}
 

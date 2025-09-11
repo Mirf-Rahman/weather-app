@@ -1,16 +1,19 @@
-import React, { useState } from "react";
-import { ForecastResponse } from "../api/weather";
+import React, { useMemo, useState } from "react";
+import { ForecastResponse, OneCallResponse } from "../api/weather";
 import { format } from "date-fns";
 
 interface Props {
   data: ForecastResponse;
   units: "metric" | "imperial";
   timeFormat?: "12h" | "24h";
+  daily?: OneCallResponse | null;
 }
 
 function groupByDay(list: ForecastResponse["list"], tz: number) {
   const map: Record<string, typeof list> = {};
+  const nowSec = Math.floor(Date.now() / 1000);
   list.forEach((item) => {
+    if (item.dt < nowSec) return; // drop past slots
     const local = (item.dt + tz) * 1000;
     const key = format(local, "yyyy-MM-dd");
     map[key] = map[key] || [];
@@ -19,46 +22,26 @@ function groupByDay(list: ForecastResponse["list"], tz: number) {
   return map;
 }
 
-export const ForecastGrid: React.FC<Props> = ({
-  data,
-  units,
-  timeFormat = "24h",
-}) => {
-  const grouped = groupByDay(data.list, data.city.timezone);
+export const ForecastGrid: React.FC<Props> = ({ data, units, timeFormat = "24h", daily }) => {
+  const grouped = useMemo(() => groupByDay(data.list, data.city.timezone), [data]);
   const tempUnit = units === "metric" ? "°C" : "°F";
   const windUnit = units === "metric" ? "m/s" : "mph";
   const [selected, setSelected] = useState<string | null>(null);
 
-  // Format time based on user preference
   const formatTime = (time: number | Date) => {
     return format(time, timeFormat === "12h" ? "h:mm aa" : "HH:mm");
   };
 
-  const handleDayClick = (day: string) => {
-    setSelected(selected === day ? null : day);
-  };
-
-  // Get weather summary text
-  const getDayWeatherSummary = (items: ForecastResponse["list"][number][]) => {
-    // Get the most common weather condition
-    const conditions = items.map((item) => item.weather[0].main.toLowerCase());
-    const conditionCounts: Record<string, number> = {};
-
-    conditions.forEach((condition) => {
-      conditionCounts[condition] = (conditionCounts[condition] || 0) + 1;
-    });
-
-    const mainCondition = Object.entries(conditionCounts).sort(
-      (a, b) => b[1] - a[1]
-    )[0][0];
-
-    // Get temperature range
-    const temps = items.map((item) => item.main.temp);
+  const getDayWeatherSummary = (items: ForecastResponse["list"][number][], fallback?: string) => {
+    if (!items.length) return fallback || "";
+    const conditions = items.map((i) => i.weather[0].main.toLowerCase());
+    const counts: Record<string, number> = {};
+    for (const c of conditions) counts[c] = (counts[c] || 0) + 1;
+    const main = Object.entries(counts).sort((a, b) => b[1] - a[1])[0][0];
+    const temps = items.map((i) => i.main.temp);
     const min = Math.round(Math.min(...temps));
     const max = Math.round(Math.max(...temps));
-
-    // Create summary text
-    const conditionText =
+    const text =
       {
         clear: "Clear skies",
         clouds: "Mostly cloudy",
@@ -68,86 +51,93 @@ export const ForecastGrid: React.FC<Props> = ({
         drizzle: "Light rain",
         mist: "Misty conditions",
         fog: "Foggy conditions",
-      }[mainCondition] || "Mixed conditions";
-
-    return `${conditionText}. Temperatures from ${min}${tempUnit} to ${max}${tempUnit}.`;
+      }[main] || "Mixed conditions";
+    return `${text}. Temperatures from ${min}${tempUnit} to ${max}${tempUnit}.`;
   };
+
+  const dayEntries: Array<[string, ForecastResponse["list"]]> = useMemo(() => {
+    if (daily?.daily?.length) {
+      const tzOff = daily.timezone_offset;
+      const keys = daily.daily.slice(0, 7).map((d) => format((d.dt + tzOff) * 1000, "yyyy-MM-dd"));
+      const uniq = Array.from(new Set(keys));
+      return uniq.map((k) => [k, grouped[k] || []]) as Array<[string, ForecastResponse["list"]]>;
+    }
+    return Object.entries(grouped);
+  }, [daily, grouped]);
 
   const expanded = selected !== null;
 
   return (
     <div className={`forecast-grid ${expanded ? "expanded" : ""}`}>
-      {Object.entries(grouped).map(([day, items]) => {
-        const temps = items.map((i) => i.main.temp);
-        const min = Math.round(Math.min(...temps));
-        const max = Math.round(Math.max(...temps));
-        const icon = items[0].weather[0].icon;
+      {dayEntries.map(([day, items]) => {
+        let min = items.length ? Math.round(Math.min(...items.map((i) => i.main.temp))) : 0;
+        let max = items.length ? Math.round(Math.max(...items.map((i) => i.main.temp))) : 0;
+        let icon = items[0]?.weather?.[0]?.icon || "01d";
+        let desc: string | undefined = items[0]?.weather?.[0]?.description;
+
+        if (daily?.daily?.length) {
+          const tzOff = daily.timezone_offset;
+          const dly = daily.daily.find((d) => format((d.dt + tzOff) * 1000, "yyyy-MM-dd") === day);
+          if (dly) {
+            min = Math.round(dly.temp.min);
+            max = Math.round(dly.temp.max);
+            icon = dly.weather[0].icon;
+            desc = dly.weather[0].description;
+          }
+        }
+
         const isSelected = selected === day;
-        const weatherSummary = getDayWeatherSummary(items);
+        const summary = getDayWeatherSummary(items, desc ? `${desc[0].toUpperCase()}${desc.slice(1)}.` : "");
 
         return (
           <div
             className={`day fade-in ${isSelected ? "selected" : ""}`}
             key={day}
-            onClick={() => handleDayClick(day)}
+            onClick={() => setSelected(isSelected ? null : day)}
             tabIndex={0}
             role="button"
             aria-pressed={isSelected}
             aria-label={`Forecast for ${format(new Date(day), "EEEE, MMMM d")}`}
           >
             <h4>{format(new Date(day), "EEE, MMM d")}</h4>
-            <img
-              src={`https://openweathermap.org/img/wn/${icon}.png`}
-              alt={items[0].weather[0].description}
-            />
+            <img src={`https://openweathermap.org/img/wn/${icon}.png`} alt={desc || items[0]?.weather?.[0]?.description || ""} />
             <div className="range">
-              <span className="max">
-                {max}
-                {tempUnit}
-              </span>
+              <span className="max">{max}{tempUnit}</span>
               <span className="divider"> / </span>
-              <span className="min">
-                {min}
-                {tempUnit}
-              </span>
+              <span className="min">{min}{tempUnit}</span>
             </div>
-
-            <div className="day-summary">{weatherSummary}</div>
+            <div className="day-summary">{summary}</div>
 
             {isSelected && (
               <div className="day-details">
                 <h5>Hourly Forecast</h5>
-                <ul>
-                  {items.slice(0, 6).map((item, i) => {
-                    const itemTime = new Date(item.dt_txt);
-                    return (
-                      <li key={i}>
-                        <div className="hour-time">{formatTime(itemTime)}</div>
-                        <div className="hour-weather">
-                          <img
-                            src={`https://openweathermap.org/img/wn/${item.weather[0].icon}.png`}
-                            alt={item.weather[0].description}
-                            className="hour-icon"
-                          />
-                        </div>
-                        <div className="hour-temp">
-                          {Math.round(item.main.temp)}
-                          {tempUnit}
-                        </div>
-                        <div className="hour-details">
-                          <span title="Feels Like">
-                            🌡️ {Math.round(item.main.feels_like)}
-                            {tempUnit}
-                          </span>
-                          <span title="Humidity">💧 {item.main.humidity}%</span>
-                          <span title="Wind">
-                            💨 {Math.round(item.wind.speed)} {windUnit}
-                          </span>
-                        </div>
-                      </li>
-                    );
-                  })}
-                </ul>
+                {items.length ? (
+                  <ul>
+                    {items.slice(0, 6).map((item, i) => {
+                      const itemTime = new Date(item.dt_txt);
+                      return (
+                        <li key={i}>
+                          <div className="hour-time">{formatTime(itemTime)}</div>
+                          <div className="hour-weather">
+                            <img
+                              src={`https://openweathermap.org/img/wn/${item.weather[0].icon}.png`}
+                              alt={item.weather[0].description}
+                              className="hour-icon"
+                            />
+                          </div>
+                          <div className="hour-temp">{Math.round(item.main.temp)}{tempUnit}</div>
+                          <div className="hour-details">
+                            <span title="Feels Like">Feels {Math.round(item.main.feels_like)}{tempUnit}</span>
+                            <span title="Humidity">Humidity {item.main.humidity}%</span>
+                            <span title="Wind">Wind {Math.round(item.wind.speed)} {windUnit}</span>
+                          </div>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                ) : (
+                  <div style={{ opacity: 0.85 }}>Hourly details are available up to 5 days ahead.</div>
+                )}
               </div>
             )}
           </div>
@@ -156,3 +146,4 @@ export const ForecastGrid: React.FC<Props> = ({
     </div>
   );
 };
+
