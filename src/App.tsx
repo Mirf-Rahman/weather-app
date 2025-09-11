@@ -304,7 +304,7 @@ export const App: React.FC = () => {
               />
 
               <button
-                className="icon-btn"
+                className={`icon-btn ${showAnalytics ? "active" : ""}`}
                 onClick={() => setShowAnalytics(!showAnalytics)}
                 title="Toggle analytics"
               >
