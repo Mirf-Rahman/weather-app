@@ -379,6 +379,10 @@ header {
   display: inline-block;
 }
 
+[data-theme="light"] .forecast-title {
+  color: #0f172a; /* near-black for light mode */
+}
+
 .forecast-title::after {
   content: "";
   position: absolute;
@@ -387,6 +391,10 @@ header {
   width: 40%;
   height: 3px;
   background: linear-gradient(90deg, #3b82f6, transparent);
+}
+
+[data-theme="light"] .forecast-title::after {
+  background: linear-gradient(90deg, #2563eb, transparent);
 }
 
 .forecast-grid {
