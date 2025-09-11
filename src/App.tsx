@@ -228,19 +228,16 @@ export const App: React.FC = () => {
 
       <div className="home-features">
         <div className="features-container">
-          <h2 className="features-title">What You'll Get</h2>
+          <h2 className="features-title">What’s Inside</h2>
           <div className="features-grid">
             <div className="feature-card">
               <div className="feature-icon">🌡️</div>
-              <h3>Real-Time Temperature</h3>
-              <p>
-                Current conditions, feels-like temperature, and daily min/max
-                values
-              </p>
+              <h3>Current Conditions</h3>
+              <p>Temperature, feels‑like, wind, humidity, sunrise/sunset</p>
             </div>
             <div className="feature-card">
               <div className="feature-icon">📊</div>
-              <h3>Detailed Metrics</h3>
+              <h3>5‑Day Forecast</h3>
               <p>
                 Comprehensive data including humidity, pressure, wind speed, and
                 visibility
@@ -248,29 +245,23 @@ export const App: React.FC = () => {
             </div>
             <div className="feature-card">
               <div className="feature-icon">�</div>
-              <h3>5-Day Forecast</h3>
-              <p>
-                Extended forecast with hourly breakdowns and weather patterns
-              </p>
+              <h3>Charts & Trends</h3>
+              <p>Interactive charts for temperature, wind, and more</p>
             </div>
             <div className="feature-card">
               <div className="feature-icon">🌍</div>
-              <h3>Global Coverage</h3>
-              <p>
-                Access weather data for any city or location around the world
-              </p>
+              <h3>Prayer Times & Alerts</h3>
+              <p>Accurate timings with 15‑minute notifications</p>
             </div>
             <div className="feature-card">
               <div className="feature-icon">🕒</div>
-              <h3>Time Zones</h3>
-              <p>
-                Local time comparison between your location and searched cities
-              </p>
+              <h3>Air Quality & UV</h3>
+              <p>Clear indices to plan your outdoor time</p>
             </div>
             <div className="feature-card">
               <div className="feature-icon">🎨</div>
-              <h3>Beautiful Interface</h3>
-              <p>Dark and light themes with weather-responsive backgrounds</p>
+              <h3>Personalization</h3>
+              <p>Light/Dark, 12/24h, metric/imperial, export/import</p>
             </div>
           </div>
         </div>

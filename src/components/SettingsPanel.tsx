@@ -642,24 +642,24 @@ export const SettingsPanel: React.FC<SettingsProps> = ({
             <div className="about-settings">
               <div className="app-info">
                 <h3>Aman Skies</h3>
-                <p>Version 1.0.0</p>
+                <p>Version 2.0.0</p>
                 <p>
-                  A modern, feature-rich weather application built with React
-                  and TypeScript.
+                  Prayer‑aware daily outlook with forecasts, alerts, analytics,
+                  and a polished glass UI.
                 </p>
               </div>
 
               <div className="features-list">
                 <h4>Features</h4>
                 <ul>
-                  <li>✅ Real-time weather data</li>
-                  <li>✅ 5-day forecasts</li>
-                  <li>✅ Location history & favorites</li>
-                  <li>✅ Weather alerts & notifications</li>
-                  <li>✅ Detailed analytics</li>
-                  <li>✅ Offline support</li>
-                  <li>✅ Dark/Light themes</li>
-                  <li>✅ Data export/import</li>
+                  <li>✅ Real‑time current conditions</li>
+                  <li>✅ 5‑day / 3‑hour forecast</li>
+                  <li>✅ Prayer times with 15‑minute alerts</li>
+                  <li>✅ Prayer & weather insights</li>
+                  <li>✅ Charts, trends, and analytics</li>
+                  <li>✅ Air Quality and UV Index</li>
+                  <li>✅ Dark/Light, 12/24h, metric/imperial</li>
+                  <li>✅ Offline caching + settings export/import</li>
                 </ul>
               </div>
 

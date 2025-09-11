@@ -2,7 +2,7 @@
 
 # Aman Skies
 
-Glass UI weather dashboard: real‑time current conditions, 5‑day / 3‑hour forecast, theming, time‑zone awareness, and smart local caching powered by **React 18 + TypeScript + Vite** and **OpenWeather** APIs.
+Prayer‑aware daily outlook: real‑time conditions, 5‑day/3‑hour forecasts, charts, air quality, and alerts — built with **React 18 + TypeScript + Vite**.
 
 <p><a href="https://weather-app-mir.vercel.app/" target="_blank"><strong>🌐 Live Demo (Vercel)</strong></a></p>
 
@@ -10,105 +10,35 @@ Glass UI weather dashboard: real‑time current conditions, 5‑day / 3‑hour f
 
 ## Overview
 
-Fast, type‑safe weather client with debounced search, geocoded suggestions, expandable hourly forecast, theme + unit preferences, and resilient caching.
+Aman Skies is a fast, polished weather experience with prayer‑time awareness. It features geocoded search, a rich current view, 5‑day / 3‑hour forecasts, charts and analytics, air quality and UV, plus notifications and flexible preferences (theme, units, 12/24‑hour time).
 
-**Typical use case:** Quickly compare local time and weather for multiple cities, drill into near‑term hourly trends, and switch units or themes seamlessly on desktop or mobile.
+## Features
+
+- Real‑time current conditions (feels‑like, wind, humidity, sunrise/sunset)
+- 5‑day / 3‑hour forecast with daily high/low aggregation
+- Charts & analytics for trends across temp, wind, and more
+- Prayer times with 15‑minute browser notifications and active highlights
+- Prayer & weather insights for practical guidance
+- Air Quality and UV Index panels
+- Personalization: Dark/Light theme, 12/24h, metric/imperial
+- Offline caching and settings export/import
+- Clean glass UI with responsive layout and subtle animations
 
 ## Tech Stack
 
-**Core:** React 18, TypeScript, Vite
+- React 18, TypeScript, Vite 5
+- Axios, date‑fns
+- Vitest + Testing Library (jsdom)
+- Hand‑crafted CSS (glassmorphism) in `AppLayout.css`, `styles/theme.css`, `styles/enhanced.css`
 
-**Data / HTTP:** Axios (typed wrappers), OpenWeather REST (current, forecast, geocode), date-fns for time formatting & timezone offset handling (manual offset math; no heavy tz lib)
+## Quick Start
 
-**State & Logic:** Custom hook (`useWeather`) for orchestration (fetch, cache, refresh, refetch on preference changes)
+### 1) Prerequisites
 
-**Styling:** Hand‑crafted CSS (glassmorphism, gradients, responsive layout) split across `AppLayout.css`, `styles/theme.css`, `styles/enhanced.css`
+- Node.js 18+
+- OpenWeather API Key: https://openweathermap.org/api
 
-**Tooling / Quality:** ESLint + @typescript-eslint, Vitest + Testing Library (jsdom), strict TS config
-
-**Build:** Vite 5 (ESM, fast HMR, environment variable prefix `VITE_`)
-
-## Key Features (Implemented)
-
-### 1. Search & Acquisition 🔍
-
-- Debounced city search (400ms) with OpenWeather Direct Geocoding suggestions
-- Recent search history & last city persistence (localStorage)
-- One‑click geolocation (HTML5 `navigator.geolocation`)
-- Smart label formatting: City, State (if any), Country
-
-### 2. Current Conditions & Hourly Insight 🌤️
-
-- Rich current card: temperature, feels like, humidity, pressure, wind, visibility, sunrise, sunset
-- Dual time context: remote local time vs user device time (auto updates every 30s)
-- Observation vs live clock timestamps surfaced for clarity
-- Contextual status text (temperature band + condition + advisory wording)
-
-### 3. Forecast Explorer 📆
-
-- 5‑day / 3‑hour feed grouped by calendar day with per‑day min/max aggregation
-- Expandable glass panel reveals upcoming hours (first 6 entries) with temp, feels like, humidity, wind
-- Animated panel entry + gradient continuity below overlay
-- Weather summary sentence generated per day (dominant condition + temp range)
-
-### 4. Personalization & Preferences ⚙️
-
-- Persisted unit system toggle (Metric °C / Imperial °F) with automatic refetch
-- Persisted 12h / 24h time format toggle
-- Persisted light / dark theme toggle (document `data-theme` attribute)
-
-### 5. Interface & Visual System 🎨
-
-- Glassmorphism layers (blur + translucency) with subtle radial lighting accents
-- Continuous adaptive gradient behind expanding forecast (no harsh solid blocks)
-- Masked scroll fade inside details panel (visual depth + readability)
-- Responsive grid & typography scaling (clamp + auto-fit patterns)
-
-### 6. Performance & Data Handling ⚡
-
-- LocalStorage namespaced cache: `cache:<type>:<units>:<key>` (separates unit domains)
-- Automatic refresh every 10 minutes (balanced with free tier limits)
-- Manual refresh button with controlled spinner duration (UX feedback)
-- Cache‑busting timestamp query param prevents stale CDN responses
-
-### 7. Resilience & Error Experience 🛡️
-
-- Graceful failure states with retry action component
-- Skeleton / spinner feedback during network operations
-- Defensive empty state when no city selected
-
-### 8. Accessibility & Semantics ♿
-
-- Forecast day cards: focusable, `role="button"`, `aria-pressed` for expanded state
-- Alt text on condition icons, accessible labels on interactive toggles
-- High‑contrast mindful color selections and large hit areas
-
-### 9. Testing & Quality 🔍
-
-- Vitest + Testing Library base setup (jsdom environment)
-- Example API smoke test scaffold (skipped to avoid network by default)
-- Strict TypeScript config enforcing safe patterns
-
-### 10. Extensibility Hooks 🔌
-
-- Central `useWeather` hook encapsulates fetch, cache, refresh, unit/time/theme side‑effects
-- Clear separation of API layer (`api/weather.ts`) from presentation components
-- Theming variables exposed via CSS custom properties and class hooks
-
-### 11. Notable Implementation Details 🧩
-
-- Manual timezone offset math (avoids heavier timezone libs)
-- Progressive enhancement styling (works without JS animations; degrades gracefully)
-- Icon requests served straight from OpenWeather static CDN (no bundling overhead)
-
-## 🚀 Quick Start
-
-### 1. Prerequisites
-
-- Node.js 18+ (Vite 5 recommends modern Node; 20+ ideal)
-- An OpenWeather API Key (free tier works). Create one at: https://openweathermap.org/api
-
-### 2. Clone & Install
+### 2) Install
 
 ```bash
 git clone https://github.com/Mirf-Rahman/weather-app.git
@@ -116,17 +46,15 @@ cd weather-app
 npm install
 ```
 
-### 3. Configure Environment
+### 3) Configure
 
-Create a `.env` file in the project root:
+Create a `.env` in the project root:
 
 ```bash
 VITE_OPENWEATHER_API_KEY=your_openweather_key_here
 ```
 
-Vite automatically exposes variables prefixed with `VITE_` via `import.meta.env`.
-
-### 4. Run Dev Server
+### 4) Run
 
 ```bash
 npm run dev
@@ -134,39 +62,36 @@ npm run dev
 
 Open the printed local URL (typically http://localhost:5173).
 
-### 5. Build Production Bundle
+### 5) Build
 
 ```bash
 npm run build
-npm run preview   # Serve the dist/ build locally
+npm run preview   # serve dist/ locally
 ```
 
-## 🔧 Scripts
+## Scripts
 
-- `npm run dev` – Start development server (fast HMR)
-- `npm run build` – Production build (outputs to `dist/`)
-- `npm run preview` – Serve built assets locally
-- `npm run lint` – ESLint over `src/`
-- `npm run test` – Run Vitest unit / component tests
+- `npm run dev` — Start development server (fast HMR)
+- `npm run build` — Production build (outputs to `dist/`)
+- `npm run preview` — Serve built assets locally
+- `npm run lint` — ESLint over `src/`
+- `npm run test` — Run Vitest unit / component tests
 
-## 🔌 Data Flow & Caching
+## Data Flow & Caching
 
-`useWeather` orchestrates data fetches and state:
+`useWeather` orchestrates fetch, cache, refresh and reacts to unit/theme/time changes. Results are cached per (type, units, key) and refreshed every 10 minutes (or manually via refresh).
 
-- Parallel current + forecast requests by city or coordinates
-- LocalStorage cache per (type, units, key) namespace
-- Last searched city & UI preferences (theme, time format) persisted
-- Auto refresh timer (10 min) + manual refresh with spinner state
-- Refetch on unit change (city or last coordinates)
-
-## 🌐 APIs Used
+## APIs Used
 
 | Purpose                 | Endpoint             |
 | ----------------------- | -------------------- |
 | Current Weather         | `/data/2.5/weather`  |
-| 5-Day / 3-Hour Forecast | `/data/2.5/forecast` |
+| 5‑Day / 3‑Hour Forecast | `/data/2.5/forecast` |
 | Geocoding (Direct)      | `/geo/1.0/direct`    |
 
-Parameters: `appid`, `q` or `lat/lon`, `units` (`metric` or `imperial`), and cache-busting `_t` timestamp.
+Parameters: `appid`, `q` or `lat/lon`, `units` (`metric` or `imperial`).
 
-Rate Limits: Respect OpenWeather free tier limits; avoid aggressive polling (current implementation: manual + 10‑minute auto interval).
+—
+
+Built for clarity and speed. Enjoy Aman Skies ☀️
+
