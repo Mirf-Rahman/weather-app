@@ -2,7 +2,6 @@ import React, { useState } from "react";
 import { usePrayerTimes } from "../hooks/usePrayerTimes";
 import { CurrentWeather } from "../api/weather";
 import { PRAYER_METHODS } from "../api/prayerTimes";
-import QiblaCompass from "./QiblaCompass";
 
 interface PrayerTimesProps {
   current: CurrentWeather;
@@ -10,7 +9,6 @@ interface PrayerTimesProps {
   method?: number;
   school?: number;
   notificationsEnabled?: boolean;
-  showQiblaCompass?: boolean;
 }
 
 const PrayerTimes: React.FC<PrayerTimesProps> = ({
@@ -19,7 +17,6 @@ const PrayerTimes: React.FC<PrayerTimesProps> = ({
   method = 2,
   school = 0,
   notificationsEnabled: prayerNotificationsEnabled = false,
-  showQiblaCompass = true,
 }) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
 
@@ -219,11 +216,6 @@ const PrayerTimes: React.FC<PrayerTimesProps> = ({
               <span className="greeting">السلام عليكم</span>
             </div>
           </div>
-        </div>
-      )}
-      {!isCollapsed && showQiblaCompass && (
-        <div style={{ marginTop: "1rem" }}>
-          <QiblaCompass latitude={current.coord.lat} longitude={current.coord.lon} />
         </div>
       )}
     </div>

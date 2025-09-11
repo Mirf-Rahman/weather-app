@@ -19,8 +19,6 @@ interface SettingsProps {
   onPrayerSchoolChange?: (school: number) => void;
   prayerNotifications?: boolean;
   onPrayerNotificationsChange?: (enabled: boolean) => void;
-  qiblaCompassEnabled?: boolean;
-  onQiblaCompassEnabledChange?: (enabled: boolean) => void;
 }
 
 export const SettingsPanel: React.FC<SettingsProps> = ({
@@ -38,8 +36,6 @@ export const SettingsPanel: React.FC<SettingsProps> = ({
   onPrayerSchoolChange,
   prayerNotifications = false,
   onPrayerNotificationsChange,
-  qiblaCompassEnabled = true,
-  onQiblaCompassEnabledChange,
 }) => {
   const [activeTab, setActiveTab] = useState<
     "general" | "prayers" | "alerts" | "data" | "about"
@@ -184,7 +180,6 @@ export const SettingsPanel: React.FC<SettingsProps> = ({
       prayerMethod,
       prayerSchool,
       prayerNotifications,
-      qiblaCompassEnabled,
       alertRules,
       exportDate: new Date().toISOString(),
     };
@@ -231,8 +226,6 @@ export const SettingsPanel: React.FC<SettingsProps> = ({
           onPrayerSchoolChange?.(Number(settings.prayerSchool));
         if (settings.prayerNotifications !== undefined)
           onPrayerNotificationsChange?.(!!settings.prayerNotifications);
-        if (settings.qiblaCompassEnabled !== undefined)
-          onQiblaCompassEnabledChange?.(!!settings.qiblaCompassEnabled);
 
         alert("Settings imported successfully!");
         loadSettings();
@@ -466,21 +459,7 @@ export const SettingsPanel: React.FC<SettingsProps> = ({
                   </small>
                 </div>
 
-                <div className="setting-item">
-                  <label>
-                    <input
-                      type="checkbox"
-                      checked={qiblaCompassEnabled}
-                      onChange={(e) =>
-                        onQiblaCompassEnabledChange?.(e.target.checked)
-                      }
-                    />
-                    Show Qibla compass
-                  </label>
-                  <small className="setting-hint">
-                    Requires motion/orientation access on supported devices
-                  </small>
-                </div>
+                
               </div>
 
               <div className="setting-group">
