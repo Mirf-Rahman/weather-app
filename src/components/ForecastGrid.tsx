@@ -9,13 +9,18 @@ interface Props {
   daily?: OneCallResponse | null;
 }
 
+function toLocalDateKey(tsSec: number, tzSec: number): string {
+  const deviceOffsetSec = new Date().getTimezoneOffset() * 60;
+  const virtualUtc = tsSec + tzSec + deviceOffsetSec;
+  return format(new Date(virtualUtc * 1000), "yyyy-MM-dd");
+}
+
 function groupByDay(list: ForecastResponse["list"], tz: number) {
   const map: Record<string, typeof list> = {};
   const nowSec = Math.floor(Date.now() / 1000);
   list.forEach((item) => {
-    if (item.dt < nowSec) return; // drop past slots
-    const local = (item.dt + tz) * 1000;
-    const key = format(local, "yyyy-MM-dd");
+    if (item.dt < nowSec) return;
+    const key = toLocalDateKey(item.dt, tz);
     map[key] = map[key] || [];
     map[key].push(item);
   });
@@ -58,12 +63,23 @@ export const ForecastGrid: React.FC<Props> = ({ data, units, timeFormat = "24h",
   const dayEntries: Array<[string, ForecastResponse["list"]]> = useMemo(() => {
     if (daily?.daily?.length) {
       const tzOff = daily.timezone_offset;
-      const keys = daily.daily.slice(0, 7).map((d) => format((d.dt + tzOff) * 1000, "yyyy-MM-dd"));
-      const uniq = Array.from(new Set(keys));
-      return uniq.map((k) => [k, grouped[k] || []]) as Array<[string, ForecastResponse["list"]]>;
+      const todayKey = toLocalDateKey(Math.floor(Date.now() / 1000), tzOff);
+      const keys = daily.daily
+        .map((d) => toLocalDateKey(d.dt, tzOff))
+        .filter((k) => k >= todayKey);
+      const uniqOrdered: string[] = [];
+      for (const k of keys) if (!uniqOrdered.includes(k)) uniqOrdered.push(k);
+      const firstSeven = uniqOrdered.slice(0, 7);
+      return firstSeven.map((k) => [k, grouped[k] || []]) as Array<[
+        string,
+        ForecastResponse["list"]
+      ]>;
     }
-    return Object.entries(grouped);
-  }, [daily, grouped]);
+    // fallback
+    const tzOff = data.city.timezone;
+    const todayKey = toLocalDateKey(Math.floor(Date.now() / 1000), tzOff);
+    return Object.entries(grouped).filter(([k]) => k >= todayKey).slice(0, 7);
+  }, [daily, grouped, data.city.timezone]);
 
   const expanded = selected !== null;
 
@@ -77,7 +93,7 @@ export const ForecastGrid: React.FC<Props> = ({ data, units, timeFormat = "24h",
 
         if (daily?.daily?.length) {
           const tzOff = daily.timezone_offset;
-          const dly = daily.daily.find((d) => format((d.dt + tzOff) * 1000, "yyyy-MM-dd") === day);
+          const dly = daily.daily.find((d) => toLocalDateKey(d.dt, tzOff) === day);
           if (dly) {
             min = Math.round(dly.temp.min);
             max = Math.round(dly.temp.max);
@@ -146,4 +162,3 @@ export const ForecastGrid: React.FC<Props> = ({ data, units, timeFormat = "24h",
     </div>
   );
 };
-
