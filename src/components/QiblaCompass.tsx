@@ -10,6 +10,8 @@ interface Props {
 const QiblaCompass: React.FC<Props> = ({ latitude, longitude }) => {
   const [heading, setHeading] = useState<number | null>(null);
   const [enabled, setEnabled] = useState(false);
+  const [supported, setSupported] = useState<boolean>(true);
+  const [secure, setSecure] = useState<boolean>(true);
 
   const bearing = useMemo(() => qiblaBearing(latitude, longitude), [latitude, longitude]);
   const rotation = useMemo(() => {
@@ -18,6 +20,9 @@ const QiblaCompass: React.FC<Props> = ({ latitude, longitude }) => {
   }, [bearing, heading]);
 
   useEffect(() => {
+    setSecure(typeof window !== "undefined" ? (window as any).isSecureContext !== false : true);
+    setSupported(typeof window !== "undefined" && typeof (window as any).DeviceOrientationEvent !== "undefined");
+
     const onOrientation = (e: any) => {
       if (typeof e.webkitCompassHeading === "number") {
         setHeading(e.webkitCompassHeading);
@@ -32,7 +37,10 @@ const QiblaCompass: React.FC<Props> = ({ latitude, longitude }) => {
     let active = false;
     const enable = async () => {
       try {
-        if (typeof (window as any).DeviceOrientationEvent !== "undefined" && typeof (window as any).DeviceOrientationEvent.requestPermission === "function") {
+        if (
+          typeof (window as any).DeviceOrientationEvent !== "undefined" &&
+          typeof (window as any).DeviceOrientationEvent.requestPermission === "function"
+        ) {
           const p = await (window as any).DeviceOrientationEvent.requestPermission();
           if (p !== "granted") return;
         }
@@ -42,7 +50,10 @@ const QiblaCompass: React.FC<Props> = ({ latitude, longitude }) => {
       } catch (_) {}
     };
 
-    enable();
+    if (supported) {
+      // Attempt to enable automatically; on iOS this will be ignored until a user gesture.
+      enable();
+    }
     return () => {
       if (active) window.removeEventListener("deviceorientation", onOrientation, true);
     };
@@ -78,11 +89,25 @@ const QiblaCompass: React.FC<Props> = ({ latitude, longitude }) => {
         <button className="qibla-enable" onClick={manualEnable}>Enable Compass</button>
       )}
       <div className="qibla-footer">
-        {heading !== null ? <span>Heading {Math.round(heading)}°</span> : <span>Heading unavailable</span>}
+        {heading !== null ? (
+          <span>Heading {Math.round(heading)}° • Align N with north</span>
+        ) : supported ? (
+          secure ? (
+            <span>Waiting for heading… tap Enable on iOS</span>
+          ) : (
+            <span>Secure context required (use HTTPS)</span>
+          )
+        ) : (
+          <span>Device orientation not supported</span>
+        )}
       </div>
+      {heading === null && (
+        <div className="qibla-footer" style={{ marginTop: 4 }}>
+          <span>Needle shows bearing from north (top)</span>
+        </div>
+      )}
     </div>
   );
 };
 
 export default QiblaCompass;
-

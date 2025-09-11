@@ -19,6 +19,8 @@ interface SettingsProps {
   onPrayerSchoolChange?: (school: number) => void;
   prayerNotifications?: boolean;
   onPrayerNotificationsChange?: (enabled: boolean) => void;
+  qiblaCompassEnabled?: boolean;
+  onQiblaCompassEnabledChange?: (enabled: boolean) => void;
 }
 
 export const SettingsPanel: React.FC<SettingsProps> = ({
@@ -36,6 +38,8 @@ export const SettingsPanel: React.FC<SettingsProps> = ({
   onPrayerSchoolChange,
   prayerNotifications = false,
   onPrayerNotificationsChange,
+  qiblaCompassEnabled = true,
+  onQiblaCompassEnabledChange,
 }) => {
   const [activeTab, setActiveTab] = useState<
     "general" | "prayers" | "alerts" | "data" | "about"
@@ -177,6 +181,10 @@ export const SettingsPanel: React.FC<SettingsProps> = ({
       dataRetention,
       animationsEnabled,
       soundEnabled,
+      prayerMethod,
+      prayerSchool,
+      prayerNotifications,
+      qiblaCompassEnabled,
       alertRules,
       exportDate: new Date().toISOString(),
     };
@@ -217,6 +225,14 @@ export const SettingsPanel: React.FC<SettingsProps> = ({
           handleAnimationsChange(settings.animationsEnabled);
         if (settings.soundEnabled !== undefined)
           handleSoundChange(settings.soundEnabled);
+        if (settings.prayerMethod !== undefined)
+          onPrayerMethodChange?.(Number(settings.prayerMethod));
+        if (settings.prayerSchool !== undefined)
+          onPrayerSchoolChange?.(Number(settings.prayerSchool));
+        if (settings.prayerNotifications !== undefined)
+          onPrayerNotificationsChange?.(!!settings.prayerNotifications);
+        if (settings.qiblaCompassEnabled !== undefined)
+          onQiblaCompassEnabledChange?.(!!settings.qiblaCompassEnabled);
 
         alert("Settings imported successfully!");
         loadSettings();
@@ -447,6 +463,22 @@ export const SettingsPanel: React.FC<SettingsProps> = ({
                   </label>
                   <small className="setting-hint">
                     Receive notifications 15 minutes before each prayer time
+                  </small>
+                </div>
+
+                <div className="setting-item">
+                  <label>
+                    <input
+                      type="checkbox"
+                      checked={qiblaCompassEnabled}
+                      onChange={(e) =>
+                        onQiblaCompassEnabledChange?.(e.target.checked)
+                      }
+                    />
+                    Show Qibla compass
+                  </label>
+                  <small className="setting-hint">
+                    Requires motion/orientation access on supported devices
                   </small>
                 </div>
               </div>

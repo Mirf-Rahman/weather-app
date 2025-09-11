@@ -53,6 +53,10 @@ export const App: React.FC = () => {
       return localStorage.getItem("prayerNotifications") === "true";
     }
   );
+  const [qiblaCompassEnabled, setQiblaCompassEnabled] = useState<boolean>(() => {
+    const stored = localStorage.getItem("qiblaCompassEnabled");
+    return stored === null ? true : stored === "true";
+  });
 
   const {
     current,
@@ -112,6 +116,9 @@ export const App: React.FC = () => {
   useEffect(() => {
     localStorage.setItem("prayerNotifications", prayerNotifications.toString());
   }, [prayerNotifications]);
+  useEffect(() => {
+    localStorage.setItem("qiblaCompassEnabled", qiblaCompassEnabled.toString());
+  }, [qiblaCompassEnabled]);
 
   // Prayer settings handlers
   const handlePrayerMethodChange = (method: number) => {
@@ -124,6 +131,9 @@ export const App: React.FC = () => {
 
   const handlePrayerNotificationsChange = (enabled: boolean) => {
     setPrayerNotifications(enabled);
+  };
+  const handleQiblaCompassEnabledChange = (enabled: boolean) => {
+    setQiblaCompassEnabled(enabled);
   };
 
   function handleSearch(city: string) {
@@ -423,6 +433,7 @@ export const App: React.FC = () => {
                 method={prayerMethod}
                 school={prayerSchool}
                 notificationsEnabled={prayerNotifications}
+                showQiblaCompass={qiblaCompassEnabled}
               />
             )}
 
@@ -495,6 +506,8 @@ export const App: React.FC = () => {
         onPrayerSchoolChange={handlePrayerSchoolChange}
         prayerNotifications={prayerNotifications}
         onPrayerNotificationsChange={handlePrayerNotificationsChange}
+        qiblaCompassEnabled={qiblaCompassEnabled}
+        onQiblaCompassEnabledChange={handleQiblaCompassEnabledChange}
       />
     </div>
   );

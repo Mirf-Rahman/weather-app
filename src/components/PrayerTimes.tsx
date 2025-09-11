@@ -10,6 +10,7 @@ interface PrayerTimesProps {
   method?: number;
   school?: number;
   notificationsEnabled?: boolean;
+  showQiblaCompass?: boolean;
 }
 
 const PrayerTimes: React.FC<PrayerTimesProps> = ({
@@ -18,6 +19,7 @@ const PrayerTimes: React.FC<PrayerTimesProps> = ({
   method = 2,
   school = 0,
   notificationsEnabled: prayerNotificationsEnabled = false,
+  showQiblaCompass = true,
 }) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
 
@@ -219,7 +221,7 @@ const PrayerTimes: React.FC<PrayerTimesProps> = ({
           </div>
         </div>
       )}
-      {!isCollapsed && (
+      {!isCollapsed && showQiblaCompass && (
         <div style={{ marginTop: "1rem" }}>
           <QiblaCompass latitude={current.coord.lat} longitude={current.coord.lon} />
         </div>
