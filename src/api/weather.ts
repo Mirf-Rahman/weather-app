@@ -181,20 +181,30 @@ export async function fetchDailyByCoords(
   units: "metric" | "imperial" = "metric"
 ): Promise<OneCallResponse> {
   const timestamp = Date.now();
-  const { data } = await axios.get<OneCallResponse>(
-    `https://api.openweathermap.org/data/2.5/onecall`,
-    {
-      params: {
-        lat,
-        lon,
-        units,
-        exclude: "current,minutely,hourly,alerts",
-        appid: import.meta.env.VITE_OPENWEATHER_API_KEY,
-        _t: timestamp,
-      },
-    }
-  );
-  return data;
+  const params = {
+    lat,
+    lon,
+    units,
+    exclude: "current,minutely,hourly,alerts",
+    appid: import.meta.env.VITE_OPENWEATHER_API_KEY as string,
+    _t: timestamp,
+  } as const;
+
+  try {
+    // Try One Call 3.0 first
+    const { data } = await axios.get<OneCallResponse>(
+      "https://api.openweathermap.org/data/3.0/onecall",
+      { params }
+    );
+    return data;
+  } catch (err) {
+    // Fallback to One Call 2.5 if 3.0 is not available on the key
+    const { data } = await axios.get<OneCallResponse>(
+      "https://api.openweathermap.org/data/2.5/onecall",
+      { params }
+    );
+    return data;
+  }
 }
 
 export async function geocodeCity(

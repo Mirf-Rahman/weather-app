@@ -399,7 +399,7 @@ header {
 
 /* When any day is expanded add extra bottom padding so page gradient continues behind panel */
 .forecast-grid.expanded {
-  padding-bottom: min(560px, 56vh); /* more room for dropdown panel */
+  padding-bottom: clamp(420px, 52vh, 640px); /* reserve space for dropdown */
 }
 
 /* Ensure container lets gradient be visible behind absolutely positioned details */
