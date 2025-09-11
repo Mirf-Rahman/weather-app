@@ -1,6 +1,6 @@
 <div align="center">
 
-# Weather App
+# Aman Skies
 
 Glass UI weather dashboard: real‑time current conditions, 5‑day / 3‑hour forecast, theming, time‑zone awareness, and smart local caching powered by **React 18 + TypeScript + Vite** and **OpenWeather** APIs.
 

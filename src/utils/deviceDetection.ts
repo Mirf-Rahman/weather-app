@@ -28,8 +28,8 @@ export const getUserAgent = (): string => {
   if (typeof window === "undefined") return "Server";
 
   if (isIOSSafari()) {
-    return "WeatherApp/1.0 (iOS Safari)";
+    return "AmanSkies/1.0 (iOS Safari)";
   }
 
-  return "WeatherApp/1.0";
+  return "AmanSkies/1.0";
 };

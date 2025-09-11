@@ -187,7 +187,7 @@ export const SettingsPanel: React.FC<SettingsProps> = ({
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `weather-app-settings-${
+    a.download = `aman-skies-settings-${
       new Date().toISOString().split("T")[0]
     }.json`;
     a.click();
@@ -630,7 +630,7 @@ export const SettingsPanel: React.FC<SettingsProps> = ({
           {activeTab === "about" && (
             <div className="about-settings">
               <div className="app-info">
-                <h3>Weather App</h3>
+                <h3>Aman Skies</h3>
                 <p>Version 1.0.0</p>
                 <p>
                   A modern, feature-rich weather application built with React

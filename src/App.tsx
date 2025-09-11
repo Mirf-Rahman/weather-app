@@ -298,7 +298,7 @@ export const App: React.FC = () => {
     >
       <header>
         <h1 className="logo" onClick={() => setShowHome(true)}>
-          <span className="logo-icon">☀️</span> Weather
+          <span className="logo-icon">☀️</span> Aman Skies
         </h1>
         {!showHome && (
           <>
