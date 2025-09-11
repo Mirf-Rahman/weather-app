@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { usePrayerTimes } from "../hooks/usePrayerTimes";
 import { CurrentWeather } from "../api/weather";
 import { PRAYER_METHODS } from "../api/prayerTimes";
+import QiblaCompass from "./QiblaCompass";
 
 interface PrayerTimesProps {
   current: CurrentWeather;
@@ -216,6 +217,11 @@ const PrayerTimes: React.FC<PrayerTimesProps> = ({
               <span className="greeting">السلام عليكم</span>
             </div>
           </div>
+        </div>
+      )}
+      {!isCollapsed && (
+        <div style={{ marginTop: "1rem" }}>
+          <QiblaCompass latitude={current.coord.lat} longitude={current.coord.lon} />
         </div>
       )}
     </div>
