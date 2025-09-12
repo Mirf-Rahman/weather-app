@@ -31,6 +31,48 @@ Aman Skies is a fast, polished weather experience with prayer‑time awareness. 
 - Vitest + Testing Library (jsdom)
 - Hand‑crafted CSS (glassmorphism) in `AppLayout.css`, `styles/theme.css`, `styles/enhanced.css`
 
+## AI Backend (Phase 1)
+
+The repo now includes a FastAPI backend scaffold for upcoming AI features (recommendations, predictions, anomaly detection).
+
+Backend quick start:
+
+1) Prereqs
+- Python 3.11 (or use Docker)
+- Optional: Postgres 15 and Redis 7 (Compose provided)
+
+2) Run with Docker (recommended)
+
+```bash
+docker compose up --build
+# Backend available at http://localhost:8000/api/health
+```
+
+3) Run locally without Docker
+
+```bash
+python -m venv .venv && . .venv/bin/activate   # Windows: .venv\Scripts\activate
+pip install -r backend/requirements.txt
+cd backend
+cp .env.example .env   # set DATABASE_URL/REDIS_URL/OPENWEATHER_API_KEY if desired
+uvicorn app.main:app --reload --port 8000
+```
+
+4) Frontend → Backend integration
+- Frontend client lives in `src/api/ai.ts`
+- Set `VITE_AI_BACKEND_URL` in `.env` if not using the default (`http://localhost:8000/api`)
+
+5) Available endpoints (Phase 1)
+- `GET /api/health` — service health
+- `POST /api/auth/signup` — create user `{ email, password }`
+- `POST /api/auth/login` — form login → `{ access_token }`
+- `POST /api/weather/ingest` — store basic weather snapshot
+- `GET /api/weather/latest?location_name=City` — fetch recent entries
+
+Notes
+- For Phase 1, DB tables are created on app start (replace with Alembic migrations in later phases).
+- Celery/Redis are configured with a basic `ping` and weather collection task stub (to be expanded in later phases).
+
 ## Quick Start
 
 ### 1) Prerequisites
@@ -94,4 +136,3 @@ Parameters: `appid`, `q` or `lat/lon`, `units` (`metric` or `imperial`).
 —
 
 Built for clarity and speed. Enjoy Aman Skies ☀️
-
