@@ -9,6 +9,7 @@ import AirQuality from "./components/AirQuality";
 import WeatherInsights from "./components/WeatherInsights";
 import PrayerTimes from "./components/PrayerTimes";
 import PrayerWeatherInsights from "./components/PrayerWeatherInsights";
+import ActivityRecommendations from "./components/ActivityRecommendations";
 import { UnitToggle } from "./components/UnitToggle";
 import { ErrorMessage } from "./components/ErrorMessage";
 import { Loader } from "./components/Loader";
@@ -32,6 +33,8 @@ export const App: React.FC = () => {
   const [showSettings, setShowSettings] = useState(false);
   const [showAnalytics, setShowAnalytics] = useState(false);
   const [showCharts, setShowCharts] = useState(false);
+  const [showRecommendations, setShowRecommendations] = useState(true);
+  const [userId, setUserId] = useState<number | null>(null);
   const [timeFormat, setTimeFormat] = useState<"12h" | "24h">(() => {
     return localStorage.getItem("timeFormat") === "12h" ? "12h" : "24h";
   });
@@ -95,6 +98,29 @@ export const App: React.FC = () => {
     document.documentElement.setAttribute("data-theme", theme);
     localStorage.setItem("theme", theme);
   }, [theme]);
+
+  // Generate a stable local user id (for activity personalization)
+  useEffect(() => {
+    try {
+      const key = "userId";
+      const existing = localStorage.getItem(key);
+      if (existing) {
+        const n = parseInt(existing, 10);
+        if (!Number.isNaN(n)) setUserId(n);
+        else {
+          const gen = Math.floor(Math.random() * 1_000_000_000);
+          localStorage.setItem(key, String(gen));
+          setUserId(gen);
+        }
+      } else {
+        const gen = Math.floor(Math.random() * 1_000_000_000);
+        localStorage.setItem(key, String(gen));
+        setUserId(gen);
+      }
+    } catch {
+      // ignore
+    }
+  }, []);
 
   // Effect to store time format preference
   useEffect(() => {
@@ -440,6 +466,14 @@ export const App: React.FC = () => {
                 airQuality={airQuality}
                 units={units}
                 theme={theme}
+              />
+            )}
+
+            {current && !loading && (
+              <ActivityRecommendations
+                current={current}
+                units={units}
+                userId={userId ?? undefined}
               />
             )}
 
