@@ -34,7 +34,7 @@ export const App: React.FC = () => {
   const [showSettings, setShowSettings] = useState(false);
   const [showAnalytics, setShowAnalytics] = useState(false);
   const [showCharts, setShowCharts] = useState(false);
-  const [showPredictions, setShowPredictions] = useState(false);
+  const [showPredictions, setShowPredictions] = useState(true);
   const [showRecommendations, setShowRecommendations] = useState(true);
   const [userId, setUserId] = useState<number | null>(null);
   const [timeFormat, setTimeFormat] = useState<"12h" | "24h">(() => {
@@ -470,6 +470,11 @@ export const App: React.FC = () => {
                 theme={theme}
               />
             )}
+
+            {current && !loading && showPredictions && (
+              <PredictionCharts current={current} />
+            )}
+
 
             {current && !loading && (
               <ActivityRecommendations
