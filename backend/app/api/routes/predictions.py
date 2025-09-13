@@ -7,6 +7,8 @@ from typing import Optional
 from ...db.session import get_db
 from ...services.historical import backfill_historical, loc_key_from_latlon
 from ...db.models import HistoricalWeather, Prediction
+from ...services.trainer_daily import train_daily
+from ...services.trainer_hourly import train_hourly
 
 
 router = APIRouter(prefix="/predictions", tags=["predictions"])
@@ -70,3 +72,25 @@ def get_predictions(req: PredictionsQuery, db: Session = Depends(get_db)):
         }
         for p in q
     ]
+
+
+class TrainRequest(BaseModel):
+    lat: float
+    lon: float
+    horizon: str  # 'daily' | 'hourly'
+    days: int = 7
+    hours: int = 48
+
+
+@router.post("/train")
+def train(req: TrainRequest, db: Session = Depends(get_db)):
+    try:
+        if req.horizon == "daily":
+            inserted = train_daily(db, lat=req.lat, lon=req.lon, days=req.days)
+        else:
+            inserted = train_hourly(db, lat=req.lat, lon=req.lon, hours=req.hours)
+        key = loc_key_from_latlon(req.lat, req.lon)
+        return {"status": "ok", "loc_key": key, "inserted": inserted, "horizon": req.horizon}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Train failed: {e}")
+

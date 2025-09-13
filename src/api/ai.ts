@@ -59,3 +59,29 @@ export async function sendFeedback(input: { user_id: number; activity_key: strin
   const { data } = await axios.post(`${API_BASE}/recommendations/feedback`, input);
   return data;
 }
+
+// Predictions API
+export async function backfillHistorical(lat: number, lon: number, months = 6) {
+  const { data } = await axios.post(`${API_BASE}/predictions/backfill`, { lat, lon, months, sync: true });
+  return data;
+}
+
+export async function trainDaily(lat: number, lon: number, days = 7) {
+  const { data } = await axios.post(`${API_BASE}/predictions/train`, { lat, lon, horizon: "daily", days });
+  return data;
+}
+
+export async function trainHourly(lat: number, lon: number, hours = 48) {
+  const { data } = await axios.post(`${API_BASE}/predictions/train`, { lat, lon, horizon: "hourly", hours });
+  return data;
+}
+
+export async function getDailyPredictions(lat: number, lon: number, days = 7) {
+  const { data } = await axios.post(`${API_BASE}/predictions`, { lat, lon, horizon: "daily", window: days });
+  return data as Array<{ ts: string; yhat: number; yhat_lower?: number; yhat_upper?: number }>;
+}
+
+export async function getHourlyPredictions(lat: number, lon: number, hours = 48) {
+  const { data } = await axios.post(`${API_BASE}/predictions`, { lat, lon, horizon: "hourly", window: hours });
+  return data as Array<{ ts: string; yhat: number; yhat_lower?: number; yhat_upper?: number }>;
+}
