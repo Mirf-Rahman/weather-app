@@ -28,3 +28,27 @@ class WeatherData(Base):
     weather_condition: Mapped[str | None] = mapped_column(String(100))
     raw_data: Mapped[dict | None] = mapped_column(JSON)
 
+
+class Activity(Base):
+    __tablename__ = "activities"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    key: Mapped[str] = mapped_column(String(100), unique=True, index=True)
+    label: Mapped[str] = mapped_column(String(120), nullable=False)
+    tags: Mapped[list | None] = mapped_column(JSON, default=list)
+    # Simple constraints for weather suitability (metric units)
+    temp_min: Mapped[float | None] = mapped_column(Float, default=None)
+    temp_max: Mapped[float | None] = mapped_column(Float, default=None)
+    wind_max: Mapped[float | None] = mapped_column(Float, default=None)  # m/s
+    humidity_max: Mapped[float | None] = mapped_column(Float, default=None)
+    allowed_conditions: Mapped[list | None] = mapped_column(JSON, default=list)
+
+
+class UserPreference(Base):
+    __tablename__ = "user_preferences"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    user_id: Mapped[int] = mapped_column(Integer, index=True)
+    activity_key: Mapped[str] = mapped_column(String(100), index=True)
+    score: Mapped[float] = mapped_column(Float, default=0.0)
+    updated_at: Mapped[str] = mapped_column(DateTime(timezone=True), server_default=func.now())
