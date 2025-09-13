@@ -52,3 +52,44 @@ class UserPreference(Base):
     activity_key: Mapped[str] = mapped_column(String(100), index=True)
     score: Mapped[float] = mapped_column(Float, default=0.0)
     updated_at: Mapped[str] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class HistoricalWeather(Base):
+    __tablename__ = "historical_weather"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    loc_key: Mapped[str] = mapped_column(String(64), index=True)
+    ts: Mapped[str] = mapped_column(DateTime(timezone=False), index=True)  # UTC
+    temp_c: Mapped[float | None] = mapped_column(Float)
+    humidity: Mapped[float | None] = mapped_column(Float)
+    pressure: Mapped[float | None] = mapped_column(Float)
+    wind_speed: Mapped[float | None] = mapped_column(Float)  # m/s
+    condition: Mapped[str | None] = mapped_column(String(64))
+    source: Mapped[str] = mapped_column(String(32), default="meteostat")
+
+
+class ModelRegistry(Base):
+    __tablename__ = "model_registry"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    loc_key: Mapped[str] = mapped_column(String(64), index=True)
+    model_type: Mapped[str] = mapped_column(String(32))  # 'lstm' | 'prophet'
+    version: Mapped[int] = mapped_column(Integer, default=1)
+    trained_at: Mapped[str] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    metrics: Mapped[dict | None] = mapped_column(JSON, default=None)
+    artifact_path: Mapped[str | None] = mapped_column(String(256))
+
+
+class Prediction(Base):
+    __tablename__ = "predictions"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    loc_key: Mapped[str] = mapped_column(String(64), index=True)
+    horizon: Mapped[str] = mapped_column(String(16))  # 'hourly' | 'daily'
+    ts: Mapped[str] = mapped_column(DateTime(timezone=False), index=True)  # target timestamp
+    yhat: Mapped[float] = mapped_column(Float)
+    yhat_lower: Mapped[float | None] = mapped_column(Float)
+    yhat_upper: Mapped[float | None] = mapped_column(Float)
+    ensemble: Mapped[bool] = mapped_column(Integer, default=1)  # 1/0
+    model_versions: Mapped[dict | None] = mapped_column(JSON, default=None)
+    created_at: Mapped[str] = mapped_column(DateTime(timezone=True), server_default=func.now())

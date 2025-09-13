@@ -7,6 +7,7 @@ from .api.routes.health import router as health_router
 from .api.routes.auth import router as auth_router
 from .api.routes.weather import router as weather_router
 from .api.routes.recommendations import router as rec_router
+from .api.routes.predictions import router as pred_router
 
 
 def create_app() -> FastAPI:
@@ -46,6 +47,7 @@ def create_app() -> FastAPI:
     app.include_router(auth_router, prefix="/api")
     app.include_router(weather_router, prefix="/api")
     app.include_router(rec_router, prefix="/api")
+    app.include_router(pred_router, prefix="/api")
 
     return app
 

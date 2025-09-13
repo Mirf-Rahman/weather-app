@@ -12,6 +12,9 @@ redis==5.0.1
 celery==5.3.4
 email-validator==2.1.0.post1
 python-multipart==0.0.9
+meteostat==1.6.5
+pandas==2.1.3
+numpy==1.25.2
 
 # ML/NLP libraries will be added in later phases
 # tensorflow==2.14.0
