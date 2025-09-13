@@ -6,7 +6,7 @@ from typing import Optional
 
 from ...db.session import get_db
 from ...services.historical import backfill_historical, loc_key_from_latlon
-from ...db.models import HistoricalWeather, Prediction
+from ...db.models import HistoricalWeather, Prediction, ModelRegistry
 from ...services.trainer_daily import train_daily
 from ...services.trainer_hourly import train_hourly
 
@@ -94,3 +94,36 @@ def train(req: TrainRequest, db: Session = Depends(get_db)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Train failed: {e}")
 
+
+
+@router.get("/historical_series")
+def historical_series(lat: float, lon: float, hours: int = 48, db: Session = Depends(get_db)):
+    key = loc_key_from_latlon(lat, lon)
+    q = (
+        db.query(HistoricalWeather)
+        .filter(HistoricalWeather.loc_key == key)
+        .order_by(HistoricalWeather.ts.desc())
+        .limit(max(1, hours))
+        .all()
+    )
+    series = [
+        {"ts": r.ts.isoformat() if hasattr(r.ts, "isoformat") else str(r.ts), "temp_c": r.temp_c}
+        for r in reversed(q)
+        if r.temp_c is not None
+    ]
+    return series
+
+@router.get("/metrics")
+def metrics(lat: float, lon: float, db: Session = Depends(get_db)):
+    key = loc_key_from_latlon(lat, lon)
+    regs = db.query(ModelRegistry).filter(ModelRegistry.loc_key == key).order_by(ModelRegistry.trained_at.desc()).all()
+    out = [
+        {
+            "model_type": r.model_type,
+            "version": r.version,
+            "trained_at": r.trained_at.isoformat() if hasattr(r.trained_at, "isoformat") else str(r.trained_at),
+            "metrics": r.metrics,
+        }
+        for r in regs
+    ]
+    return {"loc_key": key, "models": out}
