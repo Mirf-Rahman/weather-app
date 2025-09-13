@@ -2,10 +2,11 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from .core.config import settings
-from .db.session import Base, engine
+from .db.session import Base, engine, SessionLocal
 from .api.routes.health import router as health_router
 from .api.routes.auth import router as auth_router
 from .api.routes.weather import router as weather_router
+from .api.routes.recommendations import router as rec_router
 
 
 def create_app() -> FastAPI:
@@ -28,6 +29,13 @@ def create_app() -> FastAPI:
         for i in range(10):
             try:
                 Base.metadata.create_all(bind=engine)
+                # Seed activities once
+                from .seed.activities import ensure_seed_activities
+                db = SessionLocal()
+                try:
+                    ensure_seed_activities(db)
+                finally:
+                    db.close()
                 return
             except Exception as e:
                 logging.warning("DB not ready, retrying... (%s) %s", i + 1, e)
@@ -37,6 +45,7 @@ def create_app() -> FastAPI:
     app.include_router(health_router, prefix="/api")
     app.include_router(auth_router, prefix="/api")
     app.include_router(weather_router, prefix="/api")
+    app.include_router(rec_router, prefix="/api")
 
     return app
 
