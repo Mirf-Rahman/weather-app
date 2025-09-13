@@ -36,3 +36,26 @@ export async function ingestWeather(payload: {
   return data;
 }
 
+// Phase 2: Activities & Recommendations
+export async function listActivities(): Promise<{ key: string; label: string; tags: string[] }[]> {
+  const { data } = await axios.get(`${API_BASE}/recommendations/activities`);
+  return data;
+}
+
+export async function getRecommendations(input: {
+  user_id?: number;
+  units: "metric" | "imperial";
+  temperature: number;
+  humidity: number;
+  wind_speed: number;
+  condition: string;
+  top_k?: number;
+}): Promise<{ key: string; label: string; score: number; reason: string }[]> {
+  const { data } = await axios.post(`${API_BASE}/recommendations/activities`, input);
+  return data;
+}
+
+export async function sendFeedback(input: { user_id: number; activity_key: string; rating: number }) {
+  const { data } = await axios.post(`${API_BASE}/recommendations/feedback`, input);
+  return data;
+}
