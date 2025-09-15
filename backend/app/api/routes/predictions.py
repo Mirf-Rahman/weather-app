@@ -9,6 +9,7 @@ from ...services.historical import backfill_historical, loc_key_from_latlon
 from ...db.models import HistoricalWeather, Prediction, ModelRegistry
 from ...services.trainer_daily import train_daily
 from ...services.trainer_hourly import train_hourly
+from ...celery_app import celery_app
 
 
 router = APIRouter(prefix="/predictions", tags=["predictions"])
@@ -127,3 +128,52 @@ def metrics(lat: float, lon: float, db: Session = Depends(get_db)):
         for r in regs
     ]
     return {"loc_key": key, "models": out}
+
+
+class TrainAsyncRequest(BaseModel):
+    lat: float
+    lon: float
+    horizon: str  # 'daily' | 'hourly'
+    model: Optional[str] = None  # 'prophet'|'lstm'|'ets'
+    days: int = 7
+    hours: int = 48
+
+
+@router.post("/train_async")
+def train_async(req: TrainAsyncRequest):
+    if req.horizon == "daily":
+        model = req.model or "prophet"
+        async_result = celery_app.send_task(
+            "app.tasks.predictions.train_daily",
+            kwargs={"lat": req.lat, "lon": req.lon, "days": req.days, "model": model},
+            queue="predictions",
+        )
+    else:
+        model = req.model or "lstm"
+        async_result = celery_app.send_task(
+            "app.tasks.predictions.train_hourly",
+            kwargs={"lat": req.lat, "lon": req.lon, "hours": req.hours, "model": model},
+            queue="predictions",
+        )
+    return {"task_id": async_result.id, "status": "queued"}
+
+
+@router.get("/status")
+def status(id: str):
+    res = celery_app.AsyncResult(id)
+    out = {"id": id, "state": res.state}
+    if res.successful():
+        out["result"] = res.result
+    elif res.failed():
+        try:
+            out["error"] = str(res.result)
+        except Exception:
+            out["error"] = "failed"
+    return out
+
+
+@router.get("/available")
+def available(lat: float, lon: float, horizon: str, db: Session = Depends(get_db)):
+    key = loc_key_from_latlon(lat, lon)
+    q = db.query(Prediction).filter(Prediction.loc_key == key, Prediction.horizon == horizon).count()
+    return {"loc_key": key, "horizon": horizon, "count": int(q)}
