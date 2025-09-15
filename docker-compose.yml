@@ -11,6 +11,8 @@ services:
     depends_on:
       - db
       - redis
+    volumes:
+      - modeldata:/app/models
 
   db:
     image: postgres:15
@@ -28,5 +30,30 @@ services:
     ports:
       - "6379:6379"
 
+  trainer:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.trainer
+    environment:
+      - DATABASE_URL=postgresql+psycopg2://weather_user:weather_pass@db:5432/weather_ai
+      - REDIS_URL=redis://redis:6379/0
+      - OPENWEATHER_API_KEY=${OPENWEATHER_API_KEY:-}
+    depends_on:
+      - db
+      - redis
+    volumes:
+      - modeldata:/app/models
+
+  scheduler:
+    build: ./backend
+    environment:
+      - DATABASE_URL=postgresql+psycopg2://weather_user:weather_pass@db:5432/weather_ai
+      - REDIS_URL=redis://redis:6379/0
+    depends_on:
+      - db
+      - redis
+    command: ["celery", "-A", "app.celery_app.celery_app", "beat", "-l", "INFO", "-s", "/app/celerybeat-schedule"]
+
 volumes:
   pgdata: {}
+  modeldata: {}

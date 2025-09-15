@@ -1,0 +1,28 @@
+# syntax=docker/dockerfile:1
+FROM python:3.11-slim
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1
+
+WORKDIR /app
+
+# System deps for Prophet/cmdstan + build toolchain
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    gfortran \
+    libgomp1 \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY requirements.txt /app/requirements.txt
+COPY requirements-trainer.txt /app/requirements-trainer.txt
+RUN pip install --no-cache-dir -r requirements-trainer.txt
+
+COPY app /app/app
+
+# Pre-warm cmdstan on first boot (optional, can be deferred at runtime)
+ENV CMDSTAN=/root/.cmdstan
+
+# Worker will use Redis broker
+CMD ["celery", "-A", "app.celery_app.celery_app", "worker", "--loglevel=INFO", "-Q", "predictions"]
+
