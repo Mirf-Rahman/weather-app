@@ -177,3 +177,13 @@ def available(lat: float, lon: float, horizon: str, db: Session = Depends(get_db
     key = loc_key_from_latlon(lat, lon)
     q = db.query(Prediction).filter(Prediction.loc_key == key, Prediction.horizon == horizon).count()
     return {"loc_key": key, "horizon": horizon, "count": int(q)}
+
+
+@router.get("/health")
+def worker_health():
+    try:
+        res = celery_app.control.ping(timeout=2.0)
+        worker_up = bool(res)
+    except Exception:
+        worker_up = False
+    return {"worker": worker_up}

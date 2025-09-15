@@ -42,77 +42,73 @@ def _load_hourly_series(db: Session, key: str) -> pd.Series:
     return hourly.astype(float)
 
 
-def _predict_prophet(daily_df: pd.DataFrame, days: int) -> Optional[pd.DataFrame]:
+def _predict_prophet(daily_df: pd.DataFrame, days: int, *, key: str) -> Optional[pd.DataFrame]:
+    """Try to load saved Prophet model; fall back to fitting if needed."""
     try:
+        import joblib
         from prophet import Prophet
+        from pathlib import Path
+        model_path = Path("/app/models") / key / "prophet_daily.pkl"
+        if model_path.exists():
+            m = joblib.load(model_path)
+        else:
+            m = Prophet(daily_seasonality=False, weekly_seasonality=True, yearly_seasonality=True)
+            m.fit(daily_df)
+        future = m.make_future_dataframe(periods=days, freq="D", include_history=False)
+        fc = m.predict(future)
+        out = pd.DataFrame({
+            "ds": pd.to_datetime(fc["ds"]).dt.tz_localize(None),
+            "yhat": fc["yhat"].astype(float).values,
+            "yhat_lower": fc["yhat_lower"].astype(float).values,
+            "yhat_upper": fc["yhat_upper"].astype(float).values,
+        })
+        return out
     except Exception:
         return None
-    m = Prophet(daily_seasonality=False, weekly_seasonality=True, yearly_seasonality=True)
-    m.fit(daily_df)
-    future = m.make_future_dataframe(periods=days, freq="D", include_history=False)
-    fc = m.predict(future)
-    out = pd.DataFrame({
-        "ds": pd.to_datetime(fc["ds"]).dt.tz_localize(None),
-        "yhat": fc["yhat"].astype(float).values,
-        "yhat_lower": fc["yhat_lower"].astype(float).values,
-        "yhat_upper": fc["yhat_upper"].astype(float).values,
-    })
-    return out
 
 
-def _predict_lstm(hourly: pd.Series, hours: int) -> Optional[pd.DataFrame]:
+def _predict_lstm(hourly: pd.Series, hours: int, *, key: str) -> Optional[pd.DataFrame]:
+    """Try to load saved LSTM + scaler; fall back to None if unavailable."""
     try:
         import tensorflow as tf
-        from sklearn.preprocessing import MinMaxScaler
+        import joblib
         import numpy as np
+        from pathlib import Path
+        model_dir = Path("/app/models") / key
+        model_path = model_dir / "lstm_hourly.keras"
+        scaler_path = model_dir / "lstm_scaler.joblib"
+        if not (model_path.exists() and scaler_path.exists()):
+            return None
+        model = tf.keras.models.load_model(model_path)
+        scaler = joblib.load(scaler_path)
+        values = hourly.values.reshape(-1, 1)
+        scaled = scaler.transform(values).flatten().astype(np.float32)
+        window = 72
+        if len(scaled) < window + 1:
+            return None
+        last_window = scaled[-window:].tolist()
+        preds = []
+        for _ in range(hours):
+            x = np.array(last_window, dtype=np.float32)[None, :, None]
+            yhat = float(model.predict(x, verbose=0)[0, 0])
+            preds.append(yhat)
+            last_window = last_window[1:] + [yhat]
+        preds_arr = scaler.inverse_transform(np.array(preds).reshape(-1, 1)).flatten()
+
+        # Uncertainty proxy: rolling std of last day
+        tail = values[-24:].flatten()
+        sigma = float(np.std(tail)) if len(tail) else 1.0
+        last_ts = hourly.index[-1]
+        future_index = pd.date_range(last_ts + pd.Timedelta(hours=1), periods=hours, freq="H")
+        df = pd.DataFrame({
+            "ds": future_index,
+            "yhat": preds_arr,
+            "yhat_lower": preds_arr - 1.96 * sigma,
+            "yhat_upper": preds_arr + 1.96 * sigma,
+        })
+        return df
     except Exception:
         return None
-    # Retrain a small one-step model quickly (for ensemble) — alternatively load saved model
-    values = hourly.values.reshape(-1, 1)
-    scaler = MinMaxScaler().fit(values)
-    scaled = scaler.transform(values).flatten().astype(np.float32)
-    window = 72
-    X, y = [], []
-    for i in range(len(scaled) - window):
-        X.append(scaled[i:i+window])
-        y.append(scaled[i+window])
-    if len(X) < 200:
-        return None
-    X = np.array(X, dtype=np.float32)[..., None]
-    y = np.array(y, dtype=np.float32)
-    split = int(len(X) * 0.9)
-    X_train, y_train = X[:split], y[:split]
-    X_val, y_val = X[split:], y[split:]
-    model = tf.keras.Sequential([
-        tf.keras.layers.Input(shape=(window, 1)),
-        tf.keras.layers.LSTM(32),
-        tf.keras.layers.Dense(1),
-    ])
-    model.compile(optimizer="adam", loss="mse")
-    model.fit(X_train, y_train, validation_data=(X_val, y_val), epochs=5, batch_size=64, verbose=0)
-
-    last_window = scaled[-window:].tolist()
-    preds = []
-    for _ in range(hours):
-        x = np.array(last_window, dtype=np.float32)[None, :, None]
-        yhat = float(model.predict(x, verbose=0)[0, 0])
-        preds.append(yhat)
-        last_window = last_window[1:] + [yhat]
-    preds_arr = scaler.inverse_transform(np.array(preds).reshape(-1, 1)).flatten()
-    # Simple uncertainty from val residuals
-    val_pred = model.predict(X_val, verbose=0).flatten()
-    resid = y_val - val_pred
-    resid_orig = scaler.inverse_transform(resid.reshape(-1, 1)).flatten()
-    sigma = float(np.nanstd(resid_orig)) if len(resid_orig) else 1.0
-    last_ts = hourly.index[-1]
-    future_index = pd.date_range(last_ts + pd.Timedelta(hours=1), periods=hours, freq="H")
-    df = pd.DataFrame({
-        "ds": future_index,
-        "yhat": preds_arr,
-        "yhat_lower": preds_arr - 1.96 * sigma,
-        "yhat_upper": preds_arr + 1.96 * sigma,
-    })
-    return df
 
 
 def _blend(a: pd.DataFrame, b: Optional[pd.DataFrame], wa: float, wb: float) -> pd.DataFrame:
@@ -137,7 +133,7 @@ def build_daily_ensemble(db: Session, *, lat: float, lon: float, days: int = 7) 
         raise ValueError("No history for ensemble")
 
     # Prophet candidate
-    prophet_df = _predict_prophet(daily, days)
+    prophet_df = _predict_prophet(daily, days, key=key)
     # ETS candidate
     ets_df, ets_metrics = fit_ets_daily(daily, horizon_days=days)
 
@@ -189,7 +185,7 @@ def build_hourly_ensemble(db: Session, *, lat: float, lon: float, hours: int = 4
         raise ValueError("No history for ensemble")
 
     # LSTM candidate (quick retrain lightweight for now)
-    lstm_df = _predict_lstm(hourly, hours)
+    lstm_df = _predict_lstm(hourly, hours, key=key)
     # ETS candidate
     ets_df, ets_metrics = fit_ets_hourly(pd.DataFrame({"ds": hourly.index, "y": hourly.values}), horizon_hours=hours)
 
