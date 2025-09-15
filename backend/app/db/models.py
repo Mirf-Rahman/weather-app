@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, DateTime, JSON, Float, func
+from sqlalchemy import Column, Integer, String, DateTime, JSON, Float, func, Index
 from sqlalchemy.orm import Mapped, mapped_column
 
 from .session import Base
@@ -68,6 +68,10 @@ class HistoricalWeather(Base):
     source: Mapped[str] = mapped_column(String(32), default="meteostat")
 
 
+# Composite indexes for faster queries
+Index("ix_hist_loc_ts", HistoricalWeather.loc_key, HistoricalWeather.ts)
+
+
 class ModelRegistry(Base):
     __tablename__ = "model_registry"
 
@@ -93,3 +97,7 @@ class Prediction(Base):
     ensemble: Mapped[bool] = mapped_column(Integer, default=1)  # 1/0
     model_versions: Mapped[dict | None] = mapped_column(JSON, default=None)
     created_at: Mapped[str] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+# Composite indexes for predictions
+Index("ix_pred_loc_hor_ts", Prediction.loc_key, Prediction.horizon, Prediction.ts)

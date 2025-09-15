@@ -98,6 +98,10 @@ def maintenance() -> dict:
     finally:
         db.close()
 
+    # Retention policy (hours)
+    import datetime as _dt
+    from ..db.models import Prediction
+
     count = 0
     for key in list(locs)[:50]:  # cap to avoid overload
         try:
@@ -117,4 +121,17 @@ def maintenance() -> dict:
             count += 1
         except Exception:
             continue
-    return {"scheduled": count}
+
+    # Retention: keep recent windows only
+    db2 = SessionLocal()
+    try:
+        now = _dt.datetime.utcnow()
+        hourly_cutoff = now - _dt.timedelta(days=10)  # keep last 10 days of hourly
+        daily_cutoff = now - _dt.timedelta(days=60)   # keep last 60 days of daily
+        db2.query(Prediction).filter(Prediction.horizon == "hourly", Prediction.ts < hourly_cutoff).delete()
+        db2.query(Prediction).filter(Prediction.horizon == "daily", Prediction.ts < daily_cutoff).delete()
+        db2.commit()
+    finally:
+        db2.close()
+
+    return {"scheduled": count, "retention": {"hourly_days": 10, "daily_days": 60}}
