@@ -475,7 +475,6 @@ export const App: React.FC = () => {
               <PredictionCharts current={current} />
             )}
 
-
             {current && !loading && (
               <ActivityRecommendations
                 current={current}
